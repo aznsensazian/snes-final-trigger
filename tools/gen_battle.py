@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate battle assets:
   assets/obj_enemies.chr  (rows 4-7 of the OBJ tile grid: 4 32x32 enemy slots)
-  assets/enemypal.bin     (16 colors -> OBJ palette 1, CGRAM 144)
+  assets/enemypal.bin     (3 x 16 colors -> OBJ palettes 1-3, CGRAM 144)
   assets/battle_grad.bin  (HDMA backdrop gradient for battles)
 A 32x32 sprite with top-left tile t uses tiles t..t+3, t+16.., t+32.., t+48..
 Enemy slot k is placed at tile 64 + k*4."""
@@ -31,8 +31,25 @@ def main():
             tiles.append(tile_4bpp(t))
     with open(os.path.join(OUT, "obj_enemies.chr"), "wb") as f:
         f.write(b"".join(tiles))
+    # palette variants: 0 = natural greens, 1 = crimson/magma, 2 = steel/void
+    def shifted(pal, mode):
+        out = []
+        for (r, g2, b) in pal:
+            if mode == 1:
+                out.append((min(31, int(r*1.5+6)), int(g2*0.55), int(b*0.5)))
+            elif mode == 2:
+                avg = (r + g2 + b) // 3
+                out.append((int(avg*0.8+2), int(avg*0.85+2), min(31, int(avg*1.2+6))))
+            else:
+                out.append((r, g2, b))
+        return out
+    pals = b""
+    for mode in range(3):
+        p = shifted(ENEMY_PAL, mode)
+        p[0] = (0, 0, 0)
+        pals += pack_palette([bgr555(*c) for c in p])
     with open(os.path.join(OUT, "enemypal.bin"), "wb") as f:
-        f.write(pack_palette([bgr555(*c) for c in ENEMY_PAL]))
+        f.write(pals)
 
     # battle backdrop gradient: dusk amber -> deep violet
     table = bytearray()

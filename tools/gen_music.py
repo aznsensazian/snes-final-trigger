@@ -220,8 +220,64 @@ def song_mystery():
     return [stream(mel), stream([("v", 0), ("R", 8)]), stream(bass),
             stream([("v", 0), ("R", 8)])]
 
+def song_primal():
+    mel = [("i", 0), ("v", 40)]
+    line = [
+        ("E5", E), ("G5", E), ("E5", E), ("D5", E), ("E5", Q), ("G4", Q),
+        ("A4", E), ("C5", E), ("A4", E), ("G4", E), ("A4", H),
+        ("E5", E), ("G5", E), ("A5", E), ("G5", E), ("E5", Q), ("D5", Q),
+        ("C5", E), ("D5", E), ("E5", E), ("D5", E), ("A4", H),
+    ]
+    mel += line
+    bass = [("i", 1), ("v", 52)]
+    for r in ["A3", "A3", "G3", "A3"] * 2:
+        bass += [(r, E), (r, S), (r, S), ("R", E), (r, E)]
+    drum = [("i", 3), ("v", 34)]
+    for _ in range(8):
+        drum += [("C3", E), ("C3", S), ("C3", S), ("C4", E), ("C3", E),
+                 ("C4", S), ("C4", S), ("C3", E), ("C4", E)]
+    return [stream(mel), stream([("v", 0), ("R", 8)]), stream(bass), stream(drum)]
+
+def song_ruins():
+    mel = [("i", 2), ("v", 26)]
+    for _ in range(2):
+        mel += [
+            ("D5", Q), ("A4", Q), ("F4", H),
+            ("E4", Q), ("A4", Q), ("C#5", H),
+            ("D5", Q), ("F5", Q), ("E5", H),
+            ("A4", Q), ("C#5", Q), ("D4", H),
+        ]
+    harm = [("i", 0), ("v", 14)]
+    for _ in range(4):
+        harm += [("D4", E), ("A4", E), ("F4", E), ("A4", E)] * 4
+    bass = [("i", 1), ("v", 44)]
+    for _ in range(2):
+        for r in ["D3", "A2", "F2", "A2"]:
+            bass += [(r, W)]
+    return [stream(mel), stream(harm), stream(bass), stream([("v", 0), ("R", 8)])]
+
+def song_final():
+    mel = [("i", 0), ("v", 44)]
+    line = [
+        ("C5", E), ("C5", E), ("D#5", Q), ("C5", E), ("F#4", E), ("G4", H),
+        ("C5", E), ("C5", E), ("D#5", Q), ("F5", E), ("F#5", E), ("G5", H),
+        ("G#5", Q), ("G5", Q), ("F5", Q), ("D#5", Q),
+        ("D5", E), ("D#5", E), ("D5", E), ("C5", E), ("C5", H),
+    ]
+    mel += line
+    harm = [("i", 2), ("v", 18)]
+    for c in ["C4", "F#3", "G#3", "G3"] * 2:
+        harm.append((c, H))
+    bass = [("i", 1), ("v", 54)]
+    for r in ["C3", "F#2", "G#2", "G2"] * 2:
+        bass += [(r, E), (r, E), (r, E), ("R", E)]
+    drum = [("i", 3), ("v", 30)]
+    for _ in range(8):
+        drum += [("C3", Q), ("C4", E), ("C3", E), ("C4", Q), ("C3", E), ("C4", E)]
+    return [stream(mel), stream(harm), stream(bass), stream(drum)]
+
 SONGS = [song_title, song_overworld, song_battle, song_victory,
-         song_gameover, song_mystery]
+         song_gameover, song_mystery, song_primal, song_ruins, song_final]
 
 # sfx ------------------------------------------------------------------------
 def sfx_cursor():
@@ -263,8 +319,9 @@ def main():
     data = bytearray()
     base = DATA_ADDR
     songtab_addr = base
-    ptr = base + 16 + 16        # song table (8 words) + sfx table (8 words)
-    sfxtab_addr = base + 16
+    NSONG = 12
+    ptr = base + NSONG * 2 + 16
+    sfxtab_addr = base + NSONG * 2
 
     song_ptrs = []
     blobs = []
@@ -285,7 +342,7 @@ def main():
             chunk += s
         blobs.append(chunk)
         song_ptrs.append(hdr_addr)
-    while len(song_ptrs) < 8:
+    while len(song_ptrs) < NSONG:
         song_ptrs.append(0)
 
     sfx_ptrs = []

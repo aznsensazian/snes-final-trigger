@@ -113,12 +113,32 @@ EnemyTab:
         ENEMY "Gobkin",    30,  7, 4, 0, 5,   8,  6, 0, 0, 0    ; 0
         ENEMY "Fang Wolf", 50, 12, 5, 0, 9,  13,  9, 1, 0, 0    ; 1
         ENEMY "Mud Slime", 72,  8, 9, 0, 3,  11,  8, 2, 0, 0    ; 2
+        ; --- bosses (spr = $80|artIdx, pal = boss palette id) ---
+        ENEMY "GRASK",      420, 16, 9, 0, 7,  120,  80, $80, 1, 0   ; 3
+        ENEMY "MAGMADON",   700, 22, 13, 0, 6, 260, 150, $81, 1, 1   ; 4
+        ENEMY "STL WARDEN", 1050, 30, 17, 0, 10, 500, 300, $82, 1, 2 ; 5
+        ENEMY "TERRA WYRM", 1500, 38, 20, 0, 9, 900, 500, $83, 1, 3  ; 6
+        ENEMY "XETHUL",     2800, 48, 24, 0, 12, 2000, 999, $84, 2, 4 ; 7
+        ENEMY "CHRONOWYRM", 4000, 58, 28, 0, 14, 3000, 999, $83, 2, 5 ; 8
+        ENEMY "OMEGAGOLEM", 3600, 64, 34, 0, 8, 2600, 999, $82, 2, 6  ; 9
+        ; --- era enemies (palette-swap variants) ---
+        ENEMY "Raptor",     65, 14, 6, 0, 12,  20, 12, 1, 0, 1   ; 10
+        ENEMY "Lava Bug",   55, 16, 4, 0, 8,   18, 10, 0, 0, 1   ; 11
+        ENEMY "Stone Ape",  95, 18, 10, 0, 6,  26, 16, 2, 0, 2   ; 12
+        ENEMY "ScrapDrone", 90, 22, 12, 0, 14, 40, 30, 0, 0, 2   ; 13
+        ENEMY "Sec-Bot",   130, 26, 16, 0, 10, 55, 40, 1, 0, 2   ; 14
+        ENEMY "Toxic Ooze",160, 20, 18, 0, 6,  50, 35, 2, 0, 0   ; 15
+        ENEMY "Cave Bat",   45, 12, 5, 0, 13,  16, 10, 1, 0, 0   ; 16
+        ENEMY "Crawler",    80, 16, 9, 0, 7,   24, 14, 0, 0, 0   ; 17
+        ENEMY "Deep Shade",120, 20, 12, 0, 9,  45, 25, 2, 0, 2   ; 18
+        ENEMY "Void Spawn",200, 30, 18, 0, 12, 90, 60, 0, 0, 2   ; 19
+        ENEMY "Time Leech",240, 34, 20, 0, 10, 110, 70, 2, 0, 1  ; 20
 
 ; --- encounter groups ----------------------------------------------------------
 ; group: count, then count * 3 enemy ids ($FF = empty slot)
 .export EncGroupTab
 EncGroupTab:
-        .addr Grp0
+        .addr Grp0, Grp1, Grp2, Grp3, Grp4, Grp5
 Grp0:   .byte 6
         .byte 0, $FF, $FF
         .byte 0, $FF, $FF
@@ -126,6 +146,51 @@ Grp0:   .byte 6
         .byte 0, 0, $FF
         .byte 1, $FF, $FF
         .byte 0, 2, $FF
+Grp1:   .byte 6
+        .byte 1, $FF, $FF
+        .byte 16, 16, $FF
+        .byte 17, $FF, $FF
+        .byte 1, 17, $FF
+        .byte 2, 2, $FF
+        .byte 17, 16, 16
+Grp2:   .byte 6
+        .byte 10, $FF, $FF
+        .byte 11, $FF, $FF
+        .byte 10, 11, $FF
+        .byte 12, $FF, $FF
+        .byte 12, 10, $FF
+        .byte 11, 11, 12
+Grp3:   .byte 6
+        .byte 13, $FF, $FF
+        .byte 13, 13, $FF
+        .byte 14, $FF, $FF
+        .byte 15, $FF, $FF
+        .byte 14, 13, $FF
+        .byte 15, 14, $FF
+Grp4:   .byte 6
+        .byte 16, $FF, $FF
+        .byte 16, 16, $FF
+        .byte 17, 16, $FF
+        .byte 18, $FF, $FF
+        .byte 18, 17, $FF
+        .byte 18, 18, $FF
+Grp5:   .byte 5
+        .byte 19, $FF, $FF
+        .byte 19, 19, $FF
+        .byte 20, $FF, $FF
+        .byte 20, 19, $FF
+        .byte 20, 20, $FF
+
+; boss formations: 3 enemy ids each
+.export BossFormTab
+BossFormTab:
+        .byte 3, $FF, $FF       ; 0 GRASK
+        .byte 4, $FF, $FF       ; 1 MAGMADON
+        .byte 5, $FF, $FF       ; 2 STEEL WARDEN
+        .byte 6, $FF, $FF       ; 3 TERRA WYRM
+        .byte 7, $FF, $FF       ; 4 XETHUL
+        .byte 8, $FF, $FF       ; 5 CHRONO WYRM
+        .byte 9, $FF, $FF       ; 6 OMEGA GOLEM
 
 ; --- items: 16 bytes each -------------------------------------------------------
 ; +0..9 name +10 type (0 hp,1 mp,2 revive,3 full) +11 pad +12 power(w) +14 pad

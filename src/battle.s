@@ -22,6 +22,7 @@
 .import EnemyTab, EncGroupTab, ItemTab
 .import EnemyObjChr, EnemyPal, BattleGrad
 .import TsMetaTable, TsGroundMeta, TsHedgeMeta
+.import BossFormTab, BossChr, BossPals, SetFlag
 .importzp textPtr, textX, textY, textPal, textOpq
 .importzp sprX, sprY, sprTile, sprAttr, sprSize
 .importzp joyPressed, joyHeld, pendingState, frameCount, nmiFlags
@@ -29,6 +30,7 @@
 .importzp numVal, lvlUpMask
 .importzp tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7
 .importzp mapTsId, mapEncGroup, battleReturn
+.importzp bForceForm, bBossFlag, bBossDlg, pendingDlg
 
 ; battle phases
 BP_INTRO  = 0
@@ -67,6 +69,8 @@ heroFxOff:   .res 1
 bEnemyId:    .res 3
 bEnemyAlive: .res 3
 bEnemySpr:   .res 3
+bEnemyPal:   .res 3
+bActCnt:     .res 1
 bEnemyHp:    .res 6             ; 3 words
 bTurnList:   .res 8
 bTurnCount:  .res 1
@@ -98,6 +102,7 @@ strItem:     .byte "Item", 0
 strGained:   .byte "Gained ", 0
 strXpGems:   .byte " XP!", 0
 strLevelUp:  .byte " grew stronger!", 0
+strFury:     .byte "unleashes fury!", 0
 strGameOver1: .byte "The timeline fades to void.", 0
 strGameOver2: .byte "PRESS START", 0
 
@@ -419,6 +424,39 @@ ptrScr: .res 3
 .proc pickFormation
         .a8
         .i16
+        stz bActCnt
+        lda bForceForm
+        cmp #$FF
+        beq @random
+        ; forced boss formation: BossFormTab + id*3
+        a16
+        lda #0
+        a8
+        lda bForceForm
+        a16
+        and #$00FF
+        sta tmp6
+        asl
+        clc
+        adc tmp6
+        clc
+        adc #.loword(BossFormTab)
+        sta ptrScr
+        a8
+        lda #^BossFormTab
+        sta ptrScr+2
+        ldy #0
+        ldx #0
+@blp:   lda [ptrScr],y
+        phy
+        jsr initEnemySlot
+        ply
+        iny
+        inx
+        cpx #3
+        bne @blp
+        rts
+@random:
         a16
         lda #0
         a8
@@ -483,6 +521,12 @@ ptrScr: .res 3
         plx
         sta f:bEnemySpr,x
         phx
+        jsr enemyDefY
+        a8
+        lda a:22,y              ; palSlot
+        plx
+        sta f:bEnemyPal,x
+        phx
         a16
         lda a:10,y              ; maxhp
         sta tmp6
@@ -524,7 +568,8 @@ ptrScr: .res 3
 
 ; ---------------------------------------------------------------------------
 ; The whole era enemy sheet (64 tiles) lives at OBJ tiles 64-127 ($6400).
-; Slot sprites just point at spriteId*4 within it.
+; Slot sprites just point at spriteId*4 within it. A boss in slot 0 loads
+; its 64x64 art into OBJ tiles 128+ (8 chunks of 8 tiles) + palette 4.
 .proc loadEnemyGfx
         .a8
         .i16
@@ -542,6 +587,78 @@ ptrScr: .res 3
         sta A1B0
         a16
         lda #2048
+        sta DAS0L
+        a8
+        lda #$01
+        sta MDMAEN
+        ; boss?
+        lda f:bEnemySpr
+        bmi @boss
+        rts
+@boss:  and #$7F                ; art index
+        ; src base = BossChr + art*2048
+        a16
+        and #$00FF
+        xba                     ; *256
+        asl
+        asl
+        asl                     ; *2048
+        clc
+        adc #.loword(BossChr)
+        sta tmp0
+        a8
+        stz tmp2                ; row 0..7
+@row:   a16
+        lda tmp0
+        sta A1T0L
+        lda #$1801
+        sta DMAP0
+        ; dst = $6000 + (128 + row*16)*16 words
+        lda #0
+        a8
+        lda tmp2
+        a16
+        xba                     ; row*256 = row*16*16
+        clc
+        adc #(VRAM_OBJCHR + 128*16)
+        sta VMADDL
+        lda #256                ; 8 tiles
+        sta DAS0L
+        a8
+        lda #^BossChr
+        sta A1B0
+        lda #$01
+        sta MDMAEN
+        a16
+        lda tmp0
+        clc
+        adc #256
+        sta tmp0
+        a8
+        inc tmp2
+        lda tmp2
+        cmp #8
+        bne @row
+        ; boss palette -> CGRAM 192 (OBJ palette 4)
+        lda f:bEnemyPal
+        a16
+        and #$00FF
+        xba                     ; *256
+        lsr
+        lsr
+        lsr                     ; *32
+        clc
+        adc #.loword(BossPals)
+        sta A1T0L
+        a8
+        lda #^BossPals
+        sta A1B0
+        lda #192
+        sta CGADD
+        a16
+        lda #$2200
+        sta DMAP0
+        lda #32
         sta DAS0L
         a8
         lda #$01
@@ -755,6 +872,8 @@ ptrScr: .res 3
         lda a:bitTab,y
         and hideMask
         bne @nexte
+        lda f:bEnemySpr,x
+        bmi @bossSpr
         lda a:enemyXTab,y
         sta sprX
         lda a:enemyYTab,y
@@ -765,12 +884,37 @@ ptrScr: .res 3
         clc
         adc #64
         sta sprTile
-        lda #$22                ; pal 1, prio 2
+        ; attr = prio2 | (1+palSlot)<<1
+        lda f:bEnemyPal,x
+        inc
+        asl
+        ora #$20
         sta sprAttr
         lda #1
         sta sprSize
         phx
         jsr OamPush
+        plx
+        bra @nexte
+@bossSpr:
+        phx
+        lda #1
+        sta sprSize
+        ldx #0
+@bq:    lda a:bossQX,x
+        sta sprX
+        lda a:bossQY,x
+        sta sprY
+        lda a:bossQT,x
+        sta sprTile
+        lda #$28                ; pal 4, prio 2
+        sta sprAttr
+        phx
+        jsr OamPush
+        plx
+        inx
+        cpx #4
+        bne @bq
         plx
 @nexte: inx
         inc tmp0
@@ -828,6 +972,9 @@ ptrScr: .res 3
         rts
 bitTab:   .byte 1, 2, 4
 heroYTab: .byte 44, 70, 96, 122, 148
+bossQX:   .byte 24, 56, 24, 56
+bossQY:   .byte 48, 48, 80, 80
+bossQT:   .byte 128, 132, 192, 196
 .endproc
 
 ; full text redraw (clears floating numbers / submenus)
@@ -1149,10 +1296,24 @@ bSpd: .res 8
         lda joyPressed
         bit #JOY_B
         a8
-        beq @noRun
-        jsr Rand8
+        bne :+
+        jmp @noRun
+:       lda bForceForm
+        cmp #$FF
+        beq :+
+        jmp @noEscape
+:       jsr Rand8
         cmp #128
         bcc @flee
+        jsr msgWindow
+        PUTS 1, 1, 5, strNoEscape
+        jsr TextFlush
+        lda #30
+        sta bTimer
+        lda #BP_NEXT
+        sta battlePhase
+        rts
+@noEscape:
         jsr msgWindow
         PUTS 1, 1, 5, strNoEscape
         jsr TextFlush
@@ -2492,6 +2653,32 @@ hNumRow: .byte 5, 8, 12, 15, 18
         .a8
         .i16
         phx
+        ; boss special check: aiType (+21) nonzero
+        jsr enemyDefY
+        a8
+        lda a:21,y
+        beq @normalEntry
+        inc bActCnt
+        cmp #2
+        beq @ai2
+        ; aiType 1: special every 3rd action
+        lda bActCnt
+        cmp #3
+        bcc @normalEntry
+        stz bActCnt
+        plx
+        phx
+        jmp bossSpecial
+@ai2:   ; aiType 2: special every 2nd action
+        lda bActCnt
+        and #$01
+        bne @normalEntry
+        plx
+        phx
+        jmp bossSpecial
+@normalEntry:
+        plx
+        phx
         ; message: enemy name
         jsr msgWindow
         lda #0
@@ -2603,6 +2790,135 @@ hNumRow: .byte 5, 8, 12, 15, 18
         jsr TextFlush
         rts
 blinkTab2: .byte 1, 2, 4
+.endproc
+
+; ---------------------------------------------------------------------------
+; Boss special: hits every living hero for atk*3/2 - def. X = slot (pushed
+; once by enemyAct; we mirror its stack behavior and return via enemyAct's
+; epilogue equivalent).
+.proc bossSpecial
+        .a8
+        .i16
+        ; message: name + "unleashes fury!"
+        jsr msgWindow
+        lda #0
+        sta textPal
+        lda #1
+        sta textX
+        lda #1
+        sta textY
+        plx
+        phx
+        jsr enemyDefY
+        a8
+        a16
+        tya
+        sta textPtr
+        a8
+        lda #^EnemyTab
+        sta textPtr+2
+        jsr TextPut
+        PUTS 1, 2, 5, strFury
+        jsr TextFlush
+        ; attacker blink
+        plx
+        phx
+        a16
+        txa
+        and #$00FF
+        tay
+        a8
+        lda a:blinkTab3,y
+        sta hideMask
+        lda #8
+        jsr animWait
+        stz hideMask
+        lda #8
+        jsr animWait
+        ; base = atk + atk/2 + rnd&7
+        plx
+        phx
+        jsr enemyDefY
+        a8
+        a16
+        lda #0
+        a8
+        lda a:12,y
+        a16
+        and #$00FF
+        sta tmp0
+        lsr
+        clc
+        adc tmp0
+        sta tmp0                ; atk*1.5
+        a8
+        jsr Rand8
+        and #$07
+        a16
+        and #$00FF
+        clc
+        adc tmp0
+        sta tmp0
+        a8
+        ; targets: all living heroes
+        stz tmp6
+        jsr buildAllyTargets
+        stz tmp4                ; idx
+@lp:    lda tmp4
+        cmp tgtCount
+        bcs @done
+        a16
+        lda #0
+        a8
+        lda tmp4
+        a16
+        and #$00FF
+        tay
+        a8
+        lda a:bTgtIds,y
+        sta f:bVictim
+        ; per-target def
+        a16
+        lda #0
+        a8
+        lda f:bVictim
+        a16
+        and #$00FF
+        asl
+        asl
+        asl
+        asl
+        asl
+        tax
+        lda #0
+        a8
+        lda f:party+PT_DEF,x
+        a16
+        and #$00FF
+        sta tmp1
+        lda tmp0
+        sec
+        sbc tmp1
+        bpl :+
+        lda #1
+:       bne :+
+        lda #1
+:       sta bAmount
+        a8
+        lda f:bVictim
+        sta tmp5
+        jsr dmgToHero
+        inc tmp4
+        jmp @lp
+@done:  jsr drawHud
+        jsr TextFlush
+        lda #35
+        jsr animWait
+        plx
+        jsr redrawBase
+        jsr TextFlush
+        rts
+blinkTab3: .byte 1, 2, 4
 .endproc
 
 ; ===========================================================================
@@ -2733,7 +3049,28 @@ blinkTab2: .byte 1, 2, 4
         jsr waitA
 @next:  inc tmp4
         bra @lv
-@done:  jsr exitBattle
+@done:  ; boss aftermath
+        lda bBossFlag
+        cmp #$FF
+        beq @exit
+        pha
+        jsr SetFlag
+        pla
+        cmp #8                  ; WON: roll the ending
+        bne @reward
+        lda #$FF
+        sta bBossFlag
+        sta bForceForm
+        stz shHDMAEN
+        lda #ST_ENDING
+        sta pendingState
+        rts
+@reward:
+        lda bBossDlg
+        sta pendingDlg
+        lda #$FF
+        sta bBossFlag
+@exit:  jsr exitBattle
         rts
 bitTab5: .byte 1,2,4,8,16
 .endproc
@@ -2753,6 +3090,8 @@ bitTab5: .byte 1,2,4,8,16
 .proc exitBattle
         .a8
         .i16
+        lda #$FF
+        sta bForceForm
         stz shHDMAEN
         lda #1
         sta battleReturn

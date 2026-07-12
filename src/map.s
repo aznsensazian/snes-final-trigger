@@ -14,8 +14,13 @@
 .import PlaySong, PlaySfx
 .import MapTable, TsChrTable, TsChrSize, TsPalTable, TsMetaTable, TsAttrTable
 .import HeroObjChr, HeroObjChrEnd, ObjPal
+.import StoryTab
+.import DrawWindow, TextPut
+.import PartyRecruit, HeroLevelUp, party, invCount
+.import PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP, PT_FLAGS
 .importzp sprX, sprY, sprTile, sprAttr, sprSize
 .importzp joyHeld, joyPressed, pendingState, frameCount, nmiFlags, textOpq
+.importzp textPtr, textX, textY, textPal
 .importzp shBG1H, shBG1V, shHDMAEN
 .importzp tmp0, tmp1, tmp2, tmp3, tmp4, tmp5
 
@@ -25,6 +30,13 @@ ATTR_ENC   = $02
 .segment "ZEROPAGE"
 .exportzp curMap, heroX, heroY, heroDir, heroAnim, encAccum, encPend
 .exportzp mapTsId, mapEncGroup, battleReturn, mapMusic
+.exportzp mapMode, dlgNext, pendingDlg, bForceForm, bBossFlag, bBossDlg
+mapMode:      .res 1            ; 0 walk, 1 dialog open
+dlgNext:      .res 1            ; after-dialog action: 0 none, 1 battle, 2 maw
+pendingDlg:   .res 1            ; dialog to show after battle return ($FF none)
+bForceForm:   .res 1            ; forced boss formation ($FF none)
+bBossFlag:    .res 1            ; story flag bit set on boss win ($FF none)
+bBossDlg:     .res 1            ; dialog after boss win
 mapMusic:     .res 1
 mapTsId:      .res 1
 mapEncGroup:  .res 1
@@ -48,7 +60,9 @@ exitCnt:  .res 1
 gridOff:  .res 2                ; offset of grid within map blob
 
 .segment "BSS"
-mapExits: .res 128              ; up to 16 exits * 8 bytes
+mapExits: .res 128              ; up to 16 events * 8 bytes
+.export storyFlags
+storyFlags: .res 2
 
 .segment "HIBSS"
 .export mapGrid
@@ -92,7 +106,15 @@ mapGrid:  .res 1024
         jsr PlaySong
         jsr WaitVBlank
         jsr FadeIn
-        rts
+        lda pendingDlg
+        cmp #$FF
+        beq :+
+        pha
+        lda #$FF
+        sta pendingDlg
+        pla
+        jsr ShowDialog
+:       rts
 @full:  lda curMap
         jsr MapLoad
         rts
@@ -350,6 +372,8 @@ mapGrid:  .res 1024
         stz encAccum
         stz encPend
         stz textOpq
+        stz mapMode
+        stz dlgNext
 
         jsr TextClear
         jsr TextFlush
@@ -376,6 +400,40 @@ spawnOvrY: .res 1
 .proc MapFrame
         .a8
         .i16
+        lda mapMode
+        beq @walk
+        ; ---- dialog open: wait for confirm ----
+        a16
+        lda joyPressed
+        and #(JOY_A|JOY_B|JOY_START)
+        a8
+        beq @dlgIdle
+        jsr TextClear
+        jsr TextFlush
+        stz mapMode
+        stz textOpq
+        lda dlgNext
+        beq @dlgIdle
+        cmp #1
+        bne @maw
+        ; boss battle after dialog
+        stz dlgNext
+        lda #ST_BATTLE
+        sta pendingState
+        rts
+@maw:   ; bridge crossing to Xethul's Maw
+        stz dlgNext
+        lda #15
+        sta spawnOvrX
+        lda #28
+        sta spawnOvrY
+        lda #1
+        sta spawnOvr
+        lda #9
+        jsr MapLoad
+@dlgIdle:
+        rts
+@walk:
         ; ---- movement input ----
         stz heroMov
         a16
@@ -608,38 +666,23 @@ spawnOvrY: .res 1
 .endproc
 
 ; ---------------------------------------------------------------------------
-; Check exits at (lastMx,lastMy). Carry set if warped.
+; Check events at (lastMx,lastMy). Carry set if an event consumed the step.
 .proc checkExits
         .a8
         .i16
         ldx #0
-        a16
-        lda #0
-        a8
         lda exitCnt
-        beq @none
-        sta tmp2
+        bne :+
+        clc
+        rts
+:       sta tmp2
 @lp:    lda f:mapExits,x        ; mx
         cmp lastMx
         bne @next
         lda f:mapExits+1,x      ; my
         cmp lastMy
         bne @next
-        ; matched: warp
-        lda #6
-        phx
-        jsr PlaySfx
-        plx
-        lda f:mapExits+3,x      ; destX
-        sta spawnOvrX
-        lda f:mapExits+4,x      ; destY
-        sta spawnOvrY
-        lda #1
-        sta spawnOvr
-        lda f:mapExits+2,x      ; destMap
-        jsr MapLoad
-        sec
-        rts
+        jmp @match
 @next:  a16
         txa
         clc
@@ -648,7 +691,316 @@ spawnOvrY: .res 1
         a8
         dec tmp2
         bne @lp
-@none:  clc
+        clc
+        rts
+
+@match: lda f:mapExits+2,x      ; type
+        bne :+
+        jmp @warp
+:       cmp #1
+        bne :+
+        jmp @gate
+:       cmp #2
+        bne :+
+        jmp @dialog
+:       cmp #3
+        bne :+
+        jmp @recruit
+:       cmp #4
+        bne :+
+        jmp @boss
+:       cmp #5
+        bne :+
+        jmp @chest
+:       cmp #6
+        bne :+
+        jmp @heal
+:       cmp #9
+        bne :+
+        jmp @bridge
+:       clc
+        rts
+
+; ---- type 0/1: warps -------------------------------------------------
+@gate:  lda #6
+        phx
+        jsr PlaySfx
+        plx
+@warp:  lda f:mapExits+4,x      ; destX
+        sta spawnOvrX
+        lda f:mapExits+5,x      ; destY
+        sta spawnOvrY
+        lda #1
+        sta spawnOvr
+        lda f:mapExits+3,x      ; destMap
+        jsr MapLoad
+        sec
+        rts
+
+; ---- type 2: dialog ---------------------------------------------------
+@dialog:
+        lda f:mapExits+3,x
+        jsr ShowDialog
+        sec
+        rts
+
+; ---- type 3: recruit --------------------------------------------------
+@recruit:
+        lda f:mapExits+6,x
+        jsr FlagTest
+        bcc :+
+        clc
+        rts
+:       lda f:mapExits+6,x
+        phx
+        jsr SetFlag
+        plx
+        lda f:mapExits+3,x      ; hero id
+        pha
+        lda f:mapExits+4,x      ; join text
+        jsr ShowDialog
+        pla
+        jsr recruitHero
+        lda #7
+        jsr PlaySfx
+        sec
+        rts
+
+; ---- type 4: boss -----------------------------------------------------
+@boss:  lda f:mapExits+6,x
+        jsr FlagTest
+        bcc :+
+        clc
+        rts
+:       lda f:mapExits+3,x
+        sta bForceForm
+        lda f:mapExits+5,x
+        sta bBossDlg
+        lda f:mapExits+6,x
+        sta bBossFlag
+        lda f:mapExits+4,x
+        jsr ShowDialog
+        lda #1
+        sta dlgNext
+        sec
+        rts
+
+; ---- type 5: chest ----------------------------------------------------
+@chest: lda f:mapExits+6,x
+        jsr FlagTest
+        bcc :+
+        clc
+        rts
+:       lda f:mapExits+6,x
+        phx
+        jsr SetFlag
+        plx
+        ; give item
+        phx
+        lda f:mapExits+3,x
+        a16
+        and #$00FF
+        tax
+        a8
+        lda f:invCount,x
+        cmp #9
+        bcs :+
+        inc
+        sta f:invCount,x
+:       plx
+        lda #1
+        phx
+        jsr PlaySfx
+        plx
+        lda f:mapExits+4,x
+        jsr ShowDialog
+        sec
+        rts
+
+; ---- type 6: heal point -----------------------------------------------
+@heal:  phx
+        jsr healParty
+        lda #4
+        jsr PlaySfx
+        plx
+        lda f:mapExits+3,x
+        jsr ShowDialog
+        sec
+        rts
+
+; ---- type 9: rift bridge ----------------------------------------------
+@bridge:
+        lda f:storyFlags
+        and #$F0
+        cmp #$F0
+        beq @go
+        lda f:mapExits+4,x
+        jsr ShowDialog
+        sec
+        rts
+@go:    lda f:mapExits+5,x
+        jsr ShowDialog
+        lda #2
+        sta dlgNext
+        sec
+        rts
+.endproc
+
+; ---------------------------------------------------------------------------
+; Show dialog string A (StoryTab index). Opens the bottom window.
+.export ShowDialog
+.proc ShowDialog
+        .a8
+        .i16
+        pha
+        lda #1
+        sta mapMode
+        stz dlgNext
+        lda #128
+        sta textOpq
+        lda #1
+        sta textPal
+        stz textX
+        lda #19
+        sta textY
+        lda #32
+        ldx #9
+        jsr DrawWindow
+        pla
+        ; textPtr = StoryTab[id*3]
+        a16
+        and #$00FF
+        sta tmp0
+        asl
+        clc
+        adc tmp0
+        tax
+        lda f:StoryTab,x
+        sta textPtr
+        a8
+        lda f:StoryTab+2,x
+        sta textPtr+2
+        lda #2
+        sta textX
+        lda #20
+        sta textY
+        lda #0
+        sta textPal
+        jsr TextPut
+        jsr TextFlush
+        rts
+.endproc
+
+; ---------------------------------------------------------------------------
+; Story flag helpers. A = bit index 0-15. FlagTest: carry set when flag set.
+.export FlagTest, SetFlag
+.proc FlagTest
+        .a8
+        .i16
+        jsr flagPos
+        and f:storyFlags,x
+        bne @set
+        clc
+        rts
+@set:   sec
+        rts
+.endproc
+
+.proc SetFlag
+        .a8
+        .i16
+        jsr flagPos
+        ora f:storyFlags,x
+        sta f:storyFlags,x
+        rts
+.endproc
+
+; A = bit 0-15 -> X = byte index (0/1), A = mask. Trashes Y, tmp3.
+.proc flagPos
+        .a8
+        .i16
+        pha
+        and #$07
+        a16
+        and #$00FF
+        tay
+        a8
+        lda a:maskTab,y
+        sta tmp3
+        pla
+        a16
+        and #$00FF
+        lsr
+        lsr
+        lsr
+        tax
+        a8
+        lda tmp3
+        rts
+maskTab: .byte 1,2,4,8,16,32,64,128
+.endproc
+
+; ---------------------------------------------------------------------------
+; Recruit hero A at the veteran party's level.
+.proc recruitHero
+        .a8
+        .i16
+        pha
+        jsr PartyRecruit
+        ; X = hero*32 for the new hero
+        a16
+        lda #0
+        a8
+        pla
+        pha
+        a16
+        and #$00FF
+        asl
+        asl
+        asl
+        asl
+        asl
+        tax
+        a8
+        ; level up until matching hero 0's level
+@lvl:   lda f:party+PT_LVL,x
+        cmp f:party+PT_LVL
+        bcs @done
+        phx
+        jsr HeroLevelUp
+        plx
+        bra @lvl
+@done:  pla
+        rts
+.endproc
+
+; ---------------------------------------------------------------------------
+; Restore full hp/mp for all recruited heroes.
+.export healParty
+.proc healParty
+        .a8
+        .i16
+        ldx #0
+        stz tmp3
+@lp:    lda f:party+PT_FLAGS,x
+        and #$01
+        beq @next
+        a16
+        lda f:party+PT_MAXHP,x
+        sta f:party+PT_HP,x
+        lda f:party+PT_MAXMP,x
+        sta f:party+PT_MP,x
+        a8
+@next:  a16
+        txa
+        clc
+        adc #32
+        tax
+        a8
+        inc tmp3
+        lda tmp3
+        cmp #5
+        bne @lp
         rts
 .endproc
 

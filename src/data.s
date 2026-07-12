@@ -29,3 +29,8 @@ BattleGrad:  .incbin "battle_grad.bin"
 .export AudioBin, AudioBinEnd
 AudioBin:    .incbin "audio.bin"
 AudioBinEnd:
+
+.segment "BANK8"
+.export BossChr, BossPals
+BossChr:  .incbin "boss.chr"
+BossPals: .incbin "bosspal.bin"

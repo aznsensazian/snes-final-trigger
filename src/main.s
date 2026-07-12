@@ -8,6 +8,7 @@
 
 .export Main, NmiHandler, IrqHandler, WaitVBlank, Rand8
 .importzp frameCount, joyRaw, joyPressed, joyHeld, rngState
+.importzp pendingDlg, bForceForm, bBossFlag
 .import textMap
 .import TitleInit, TitleFrame, IntroInit, IntroFrame
 .import MapInit, MapFrame
@@ -70,6 +71,11 @@ oamHiBuf:     .res 32
         stz shHDMAEN
 
         jsr OamClear
+
+        lda #$FF
+        sta pendingDlg
+        sta bForceForm
+        sta bBossFlag
 
         lda #ST_TITLE
         sta pendingState

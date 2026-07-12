@@ -9,6 +9,8 @@
 .import TextInit, TextClear, TextPut, TextPutTile, TextFlush, DrawWindow
 .import PartyInit
 .import PlaySong, PlaySfx
+.import storyFlags
+.importzp curMap, pendingDlg, bForceForm, bBossFlag, spawnOvr
 .import TitleChr, TitleChrEnd, TitleMap, TitlePal, TitleGrad
 .importzp textPtr, textX, textY, textPal, textOpq
 .importzp frameCount, joyPressed, joyHeld, pendingState, nmiFlags, shHDMAEN
@@ -253,6 +255,14 @@ introLeft:   .res 1             ; left column for text
         lda #1
         jsr PlaySfx
         jsr PartyInit
+        stz storyFlags
+        stz storyFlags+1
+        stz curMap
+        stz spawnOvr
+        lda #$FF
+        sta pendingDlg
+        sta bForceForm
+        sta bBossFlag
         lda #ST_INTRO
         sta pendingState
         rts
