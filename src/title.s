@@ -10,6 +10,7 @@
 .import PartyInit
 .import PlaySong, PlaySfx
 .import storyFlags
+.import SaveExists, LoadGame
 .importzp curMap, pendingDlg, bForceForm, bBossFlag, spawnOvr
 .import TitleChr, TitleChrEnd, TitleMap, TitlePal, TitleGrad
 .importzp textPtr, textX, textY, textPal, textOpq
@@ -266,7 +267,8 @@ introLeft:   .res 1             ; left column for text
         lda #ST_INTRO
         sta pendingState
         rts
-@cont:  ; no save system yet: show message
+@cont:  jsr SaveExists
+        bcs @doLoad
         stz textOpq
         lda #2
         sta textPal
@@ -282,6 +284,19 @@ introLeft:   .res 1             ; left column for text
         sta textPtr+2
         jsr TextPut
         jsr TextFlush
+        bra @noA
+@doLoad:
+        lda #1
+        jsr PlaySfx
+        jsr LoadGame
+        lda #$FF
+        sta pendingDlg
+        sta bForceForm
+        sta bBossFlag
+        stz spawnOvr
+        lda #ST_MAP
+        sta pendingState
+        rts
 @noA:   a16
         lda joyPressed
         and #JOY_B

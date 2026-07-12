@@ -15,8 +15,10 @@
 .import MapTable, TsChrTable, TsChrSize, TsPalTable, TsMetaTable, TsAttrTable
 .import HeroObjChr, HeroObjChrEnd, ObjPal
 .import StoryTab
-.import DrawWindow, TextPut
+.import DrawWindow, TextPut, TextPutTile
 .import PartyRecruit, HeroLevelUp, party, invCount
+.import SaveGame
+.import PrintNumR
 .import PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP, PT_FLAGS
 .importzp sprX, sprY, sprTile, sprAttr, sprSize
 .importzp joyHeld, joyPressed, pendingState, frameCount, nmiFlags, textOpq
@@ -31,7 +33,8 @@ ATTR_ENC   = $02
 .exportzp curMap, heroX, heroY, heroDir, heroAnim, encAccum, encPend
 .exportzp mapTsId, mapEncGroup, battleReturn, mapMusic
 .exportzp mapMode, dlgNext, pendingDlg, bForceForm, bBossFlag, bBossDlg
-mapMode:      .res 1            ; 0 walk, 1 dialog open
+mapMode:      .res 1            ; 0 walk, 1 dialog, 2 pause menu
+pauseSel:     .res 1
 dlgNext:      .res 1            ; after-dialog action: 0 none, 1 battle, 2 maw
 pendingDlg:   .res 1            ; dialog to show after battle return ($FF none)
 bForceForm:   .res 1            ; forced boss formation ($FF none)
@@ -402,7 +405,10 @@ spawnOvrY: .res 1
         .i16
         lda mapMode
         beq @walk
-        ; ---- dialog open: wait for confirm ----
+        cmp #2
+        bne :+
+        jmp pauseFrame
+:       ; ---- dialog open: wait for confirm ----
         a16
         lda joyPressed
         and #(JOY_A|JOY_B|JOY_START)
@@ -434,7 +440,13 @@ spawnOvrY: .res 1
 @dlgIdle:
         rts
 @walk:
-        ; ---- movement input ----
+        a16
+        lda joyPressed
+        and #JOY_START
+        a8
+        beq :+
+        jmp openPause
+:       ; ---- movement input ----
         stz heroMov
         a16
         stz tmp0                ; dx
@@ -847,6 +859,182 @@ spawnOvrY: .res 1
 .endproc
 
 ; ---------------------------------------------------------------------------
+; Pause menu: Resume / Save / Title.
+.export openPause
+.proc openPause
+        .a8
+        .i16
+        lda #2
+        sta mapMode
+        stz pauseSel
+        jsr drawPause
+        rts
+.endproc
+
+.proc drawPause
+        .a8
+        .i16
+        lda #128
+        sta textOpq
+        lda #1
+        sta textPal
+        lda #10
+        sta textX
+        lda #8
+        sta textY
+        lda #12
+        ldx #8
+        jsr DrawWindow
+        lda #0
+        sta textPal
+        lda #13
+        sta textX
+        lda #10
+        sta textY
+        a16
+        lda #.loword(strResume)
+        sta textPtr
+        a8
+        lda #^strResume
+        sta textPtr+2
+        jsr TextPut
+        lda #13
+        sta textX
+        lda #12
+        sta textY
+        a16
+        lda #.loword(strSave)
+        sta textPtr
+        a8
+        lda #^strSave
+        sta textPtr+2
+        jsr TextPut
+        lda #13
+        sta textX
+        lda #14
+        sta textY
+        a16
+        lda #.loword(strQuit)
+        sta textPtr
+        a8
+        lda #^strQuit
+        sta textPtr+2
+        jsr TextPut
+        ; cursor
+        stz tmp3
+@cur:   lda tmp3
+        asl
+        clc
+        adc #10
+        sta textY
+        lda #11
+        sta textX
+        lda #0
+        sta textPal
+        lda tmp3
+        cmp pauseSel
+        beq @hand
+        lda #TILE_OSPACE
+        bra @put
+@hand:  lda #TILE_CURSOR
+@put:   jsr TextPutTile
+        inc tmp3
+        lda tmp3
+        cmp #3
+        bne @cur
+        jsr TextFlush
+        rts
+.endproc
+
+.proc pauseFrame
+        .a8
+        .i16
+        a16
+        lda joyPressed
+        bit #JOY_UP
+        a8
+        beq :+
+        lda pauseSel
+        bne @u
+        lda #3
+@u:     dec
+        sta pauseSel
+        lda #0
+        jsr PlaySfx
+:       a16
+        lda joyPressed
+        bit #JOY_DOWN
+        a8
+        beq :+
+        lda pauseSel
+        inc
+        cmp #3
+        bcc @d
+        lda #0
+@d:     sta pauseSel
+        lda #0
+        jsr PlaySfx
+:       jsr drawPause
+        a16
+        lda joyPressed
+        bit #JOY_B
+        a8
+        beq :+
+        jmp @close
+:       a16
+        lda joyPressed
+        bit #(JOY_A|JOY_START)
+        a8
+        beq @out
+        lda pauseSel
+        beq @close
+        cmp #1
+        beq @save
+        lda #ST_TITLE
+        sta pendingState
+        stz mapMode
+        jsr TextClear
+        jsr TextFlush
+        rts
+@save:  jsr SaveGame
+        lda #1
+        jsr PlaySfx
+        lda #1
+        sta mapMode
+        stz dlgNext
+        lda #128
+        sta textOpq
+        lda #1
+        sta textPal
+        stz textX
+        lda #19
+        sta textY
+        lda #32
+        ldx #9
+        jsr DrawWindow
+        a16
+        lda #.loword(strSaved)
+        sta textPtr
+        a8
+        lda #^strSaved
+        sta textPtr+2
+        lda #2
+        sta textX
+        lda #20
+        sta textY
+        lda #0
+        sta textPal
+        jsr TextPut
+        jsr TextFlush
+        rts
+@close: stz mapMode
+        stz textOpq
+        jsr TextClear
+        jsr TextFlush
+@out:   rts
+.endproc
+
+; ---------------------------------------------------------------------------
 ; Show dialog string A (StoryTab index). Opens the bottom window.
 .export ShowDialog
 .proc ShowDialog
@@ -1127,3 +1315,9 @@ maskTab: .byte 1,2,4,8,16,32,64,128
         sta INIDISP
         rts
 .endproc
+
+.segment "RODATA"
+strResume: .byte "Resume", 0
+strSave:   .byte "Save", 0
+strQuit:   .byte "Title", 0
+strSaved:  .byte "Game saved.", 0
