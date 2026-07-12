@@ -1,0 +1,16 @@
+; ---------------------------------------------------------------------------
+; Asset data banks (.incbin of generated files in assets/)
+; ---------------------------------------------------------------------------
+
+.segment "BANK1"
+.export FontChr, FontChrEnd, TextPal
+.export TitleChr, TitleChrEnd, TitleMap, TitlePal, TitleGrad
+
+FontChr:     .incbin "font.chr"
+FontChrEnd:
+TextPal:     .incbin "textpal.bin"
+TitleChr:    .incbin "title_logo.chr"
+TitleChrEnd:
+TitleMap:    .incbin "title_logo.map"
+TitlePal:    .incbin "title_pal.bin"
+TitleGrad:   .incbin "title_grad.bin"
