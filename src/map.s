@@ -630,7 +630,9 @@ spawnOvrY: .res 1
         beq @cam
         clc
         adc encAccum
-        sta encAccum            ; accumulates rate per wild step
+        bcc :+
+        lda #$FF                ; saturate, never wrap back to low odds
+:       sta encAccum            ; accumulates rate per wild step
         jsr Rand8
         cmp encAccum
         bcs @cam
