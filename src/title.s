@@ -7,8 +7,9 @@
 
 .export TitleInit, TitleFrame, IntroInit, IntroFrame
 .import TextInit, TextClear, TextPut, TextPutTile, TextFlush, DrawWindow
+.import PartyInit
 .import TitleChr, TitleChrEnd, TitleMap, TitlePal, TitleGrad
-.importzp textPtr, textX, textY, textPal
+.importzp textPtr, textX, textY, textPal, textOpq
 .importzp frameCount, joyPressed, joyHeld, pendingState, nmiFlags, shHDMAEN
 .importzp tmp0
 
@@ -64,6 +65,7 @@ introLeft:   .res 1             ; left column for text
         lda #$80
         sta shHDMAEN
 
+        stz textOpq
         stz titlePhase
         stz titleCursor
         jsr drawBase
@@ -158,6 +160,8 @@ introLeft:   .res 1             ; left column for text
         lda #1
         sta titlePhase
         stz titleCursor
+        lda #128
+        sta textOpq
         lda #1
         sta textPal
         lda #9
@@ -213,7 +217,7 @@ introLeft:   .res 1             ; left column for text
         sta textY
         lda titleCursor
         beq @c0
-        lda #' '-32
+        lda #TILE_OSPACE
         jsr TextPutTile
         lda #10
         sta textX
@@ -228,7 +232,7 @@ introLeft:   .res 1             ; left column for text
         sta textX
         lda #21
         sta textY
-        lda #' '-32
+        lda #TILE_OSPACE
         jsr TextPutTile
 @cd:    jsr TextFlush
 
@@ -239,10 +243,12 @@ introLeft:   .res 1             ; left column for text
         beq @noA
         lda titleCursor
         bne @cont
+        jsr PartyInit
         lda #ST_INTRO
         sta pendingState
         rts
 @cont:  ; no save system yet: show message
+        stz textOpq
         lda #2
         sta textPal
         lda #11
@@ -263,6 +269,7 @@ introLeft:   .res 1             ; left column for text
         a8
         beq @out
         stz titlePhase
+        stz textOpq
         jsr drawBase
         jsr TextFlush
 @out:   rts
@@ -289,6 +296,7 @@ introLeft:   .res 1             ; left column for text
         lda #V_BG34NBA
         sta BG34NBA
 
+        stz textOpq
         stz introPage
         jsr pageStart
 

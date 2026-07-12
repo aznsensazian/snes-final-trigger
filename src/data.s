@@ -19,3 +19,8 @@ TitleGrad:   .incbin "title_grad.bin"
 HeroObjChr:  .incbin "obj_hero.chr"
 HeroObjChrEnd:
 ObjPal:      .incbin "objpal.bin"
+
+.export EnemyObjChr, EnemyPal, BattleGrad
+EnemyObjChr: .incbin "obj_enemies.chr"
+EnemyPal:    .incbin "enemypal.bin"
+BattleGrad:  .incbin "battle_grad.bin"

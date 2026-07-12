@@ -36,34 +36,48 @@ def render_ui(art):
 def main():
     os.makedirs(OUT, exist_ok=True)
     chr_data = bytearray()
+    glyph_cells = []
     for code in range(32, 127):
         art = GLYPHS.get(chr(code))
         if art is None:
             art = GLYPHS["?"]
-        chr_data += tile_2bpp(render_glyph(art))
+        cell = render_glyph(art)
+        glyph_cells.append(cell)
+        chr_data += tile_2bpp(cell)
     for name in UI_ORDER:
-        chr_data += tile_2bpp(render_ui(UI_TILES[name]))
+        cell = render_ui(UI_TILES[name])
+        # UI glyphs get opaque background (they appear inside windows)
+        if name not in ("win_tl", "win_t", "win_tr", "win_l", "win_fill",
+                        "win_r", "win_bl", "win_b", "win_br"):
+            cell = [[2 if v == 0 else v for v in row] for row in cell]
+        chr_data += tile_2bpp(cell)
+    # pad to tile 128, then opaque-background ASCII copy (for window text)
+    while len(chr_data) < 128 * 16:
+        chr_data += bytes(16)
+    for cell in glyph_cells:
+        opq = [[2 if v == 0 else v for v in row] for row in cell]
+        chr_data += tile_2bpp(opq)
     with open(os.path.join(OUT, "font.chr"), "wb") as f:
         f.write(chr_data)
 
     # BG3 2bpp palettes (CGRAM colors 0-31, 8 palettes of 4)
     pal = []
-    # pal 0: main text. 0=transparent, 1=white, 2=shadow navy, 3=gold
-    pal += [0, bgr555(31, 31, 31), bgr555(4, 4, 10), bgr555(31, 26, 8)]
+    # pal 0: main text. 0=transparent, 1=white, 2=shadow/window navy, 3=gold
+    pal += [0, bgr555(31, 31, 31), bgr555(2, 3, 11), bgr555(31, 26, 8)]
     # pal 1: window chrome. 1=outer silver line, 2=fill dark blue, 3=inner gold line
     pal += [0, bgr555(28, 28, 31), bgr555(2, 3, 11), bgr555(24, 20, 6)]
     # pal 2: dim/gray text (disabled entries)
-    pal += [0, bgr555(16, 16, 18), bgr555(4, 4, 10), bgr555(12, 12, 14)]
+    pal += [0, bgr555(16, 16, 18), bgr555(2, 3, 11), bgr555(12, 12, 14)]
     # pal 3: yellow highlight text
-    pal += [0, bgr555(31, 30, 10), bgr555(6, 5, 2), bgr555(31, 20, 4)]
+    pal += [0, bgr555(31, 30, 10), bgr555(2, 3, 11), bgr555(31, 20, 4)]
     # pal 4: green (heals / HP)
-    pal += [0, bgr555(12, 31, 14), bgr555(2, 8, 4), bgr555(24, 31, 24)]
+    pal += [0, bgr555(12, 31, 14), bgr555(2, 3, 11), bgr555(24, 31, 24)]
     # pal 5: red (damage / alerts)
-    pal += [0, bgr555(31, 10, 8), bgr555(8, 2, 2), bgr555(31, 20, 16)]
+    pal += [0, bgr555(31, 10, 8), bgr555(2, 3, 11), bgr555(31, 20, 16)]
     # pal 6: cyan (magic / crystals)
-    pal += [0, bgr555(14, 26, 31), bgr555(3, 6, 10), bgr555(26, 31, 31)]
+    pal += [0, bgr555(14, 26, 31), bgr555(2, 3, 11), bgr555(26, 31, 31)]
     # pal 7: purple (time / void)
-    pal += [0, bgr555(24, 12, 31), bgr555(6, 3, 10), bgr555(30, 24, 31)]
+    pal += [0, bgr555(24, 12, 31), bgr555(2, 3, 11), bgr555(30, 24, 31)]
     with open(os.path.join(OUT, "textpal.bin"), "wb") as f:
         f.write(pack_palette(pal))
     print(f"font.chr: {len(chr_data)} bytes ({len(chr_data)//16} tiles), textpal.bin: 64 bytes")

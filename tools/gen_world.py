@@ -438,6 +438,9 @@ def main():
         "TsPalTable:  .faraddr Ts0Pal",
         "TsMetaTable: .faraddr Ts0Meta",
         "TsAttrTable: .faraddr Ts0Attr",
+        ".export TsGroundMeta, TsHedgeMeta",
+        "TsGroundMeta: .byte %d" % idx0['.'],
+        "TsHedgeMeta:  .byte %d" % idx0['T'],
     ]
     with open(os.path.join(OUT, "world.s"), "w") as f:
         f.write("\n".join(lines) + "\n")

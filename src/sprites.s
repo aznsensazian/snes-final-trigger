@@ -10,11 +10,12 @@
 .importzp nmiFlags
 
 .segment "ZEROPAGE"
-.exportzp sprX, sprY, sprTile, sprAttr, oamIdx
+.exportzp sprX, sprY, sprTile, sprAttr, sprSize, oamIdx
 sprX:    .res 1
 sprY:    .res 1
 sprTile: .res 1
 sprAttr: .res 1
+sprSize: .res 1                 ; 0 = small, 1 = large (OBSEL size pair)
 oamIdx:  .res 1                 ; next free OAM slot (0..127)
 
 .segment "CODE"
@@ -83,7 +84,12 @@ oamIdx:  .res 1                 ; next free OAM slot (0..127)
         a8
         lda f:maskTab,x
         sta tmpMask
+        lda sprSize
+        beq @small
         lda f:valTab,x
+        bra @haveVal
+@small: lda #0
+@haveVal:
         sta tmpVal
         a16
         lda #0

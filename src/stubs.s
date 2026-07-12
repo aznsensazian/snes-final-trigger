@@ -5,14 +5,13 @@
 .include "macros.inc"
 .include "defs.inc"
 
-.export BattleInit, BattleFrame
-.export GameOverInit, GameOverFrame, EndingInit, EndingFrame
+.export EndingInit, EndingFrame
 .import TextClear, TextPut, TextFlush
 .importzp textPtr, textX, textY, textPal, shHDMAEN
 
 .segment "CODE"
 
-.proc StubInit
+.proc EndingInit
         .a8
         .i16
         lda #$80
@@ -40,18 +39,11 @@
         rts
 .endproc
 
-.proc StubFrame
+.proc EndingFrame
         .a8
         .i16
         rts
 .endproc
 
-BattleInit    = StubInit
-BattleFrame   = StubFrame
-GameOverInit  = StubInit
-GameOverFrame = StubFrame
-EndingInit    = StubInit
-EndingFrame   = StubFrame
-
 .segment "RODATA"
-strWip: .byte "UNDER CONSTRUCTION", 0
+strWip: .byte "THE END...?", 0

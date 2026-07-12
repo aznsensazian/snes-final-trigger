@@ -14,7 +14,8 @@
 .importzp nmiFlags
 
 .segment "ZEROPAGE"
-.exportzp textPtr, textX, textY, textPal
+.exportzp textPtr, textX, textY, textPal, textOpq
+textOpq:  .res 1                ; nonzero: use opaque-background glyphs
 textPtr:  .res 3                ; 24-bit string pointer
 textX:    .res 1                ; column 0..31
 textY:    .res 1                ; row 0..31
@@ -124,6 +125,8 @@ textMap:  .res 2048
         beq @nl
         sec
         sbc #32
+        clc
+        adc textOpq             ; +128 when opaque mode
         a16
         and #$00FF
         jsr putTile16

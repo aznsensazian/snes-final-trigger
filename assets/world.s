@@ -19,3 +19,6 @@ TsChrSize:   .word Ts0ChrEnd-Ts0Chr
 TsPalTable:  .faraddr Ts0Pal
 TsMetaTable: .faraddr Ts0Meta
 TsAttrTable: .faraddr Ts0Attr
+.export TsGroundMeta, TsHedgeMeta
+TsGroundMeta: .byte 2
+TsHedgeMeta:  .byte 10

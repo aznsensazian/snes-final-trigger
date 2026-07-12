@@ -36,3 +36,4 @@ TILE_BAREMPTY = 106
 TILE_ARROWDN  = 107
 TILE_NOTE     = 108
 TILE_CRYSTAL  = 109
+TILE_OSPACE   = 128             ; opaque space (window background)

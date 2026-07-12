@@ -13,8 +13,8 @@
 .import OamReset, OamPush, OamFinish
 .import MapTable, TsChrTable, TsChrSize, TsPalTable, TsMetaTable, TsAttrTable
 .import HeroObjChr, HeroObjChrEnd, ObjPal
-.importzp sprX, sprY, sprTile, sprAttr
-.importzp joyHeld, joyPressed, pendingState, frameCount, nmiFlags
+.importzp sprX, sprY, sprTile, sprAttr, sprSize
+.importzp joyHeld, joyPressed, pendingState, frameCount, nmiFlags, textOpq
 .importzp shBG1H, shBG1V, shHDMAEN
 .importzp tmp0, tmp1, tmp2, tmp3, tmp4, tmp5
 
@@ -23,6 +23,10 @@ ATTR_ENC   = $02
 
 .segment "ZEROPAGE"
 .exportzp curMap, heroX, heroY, heroDir, heroAnim, encAccum, encPend
+.exportzp mapTsId, mapEncGroup, battleReturn
+mapTsId:      .res 1
+mapEncGroup:  .res 1
+battleReturn: .res 1
 curMap:   .res 1
 mapPtr:   .res 3                ; current map blob
 attrPtr:  .res 3                ; tileset attr table
@@ -54,7 +58,38 @@ mapGrid:  .res 1024
 .proc MapInit
         .a8
         .i16
-        lda curMap
+        lda battleReturn
+        beq @full
+        ; quick restore after battle: VRAM map data is untouched
+        stz battleReturn
+        jsr FadeOut
+        lda #$09
+        sta BGMODE
+        lda #V_BG1SC_64
+        sta BG1SC
+        lda #V_BG3SC
+        sta BG3SC
+        lda #V_BG12NBA
+        sta BG12NBA
+        lda #V_BG34NBA
+        sta BG34NBA
+        lda #V_OBSEL
+        sta OBSEL
+        lda #$15
+        sta TM
+        stz encAccum
+        stz encPend
+        stz textOpq
+        jsr TextClear
+        jsr TextFlush
+        jsr updateCamera
+        jsr OamReset
+        jsr drawHero
+        jsr OamFinish
+        jsr WaitVBlank
+        jsr FadeIn
+        rts
+@full:  lda curMap
         jsr MapLoad
         rts
 .endproc
@@ -90,8 +125,13 @@ mapGrid:  .res 1024
         sta mapPtr+2
 
         ; header fields
+        lda [mapPtr]
+        sta mapTsId
         ldy #1
         lda [mapPtr],y          ; music id (used by audio stage)
+        ldy #2
+        lda [mapPtr],y
+        sta mapEncGroup
         ldy #3
         lda [mapPtr],y
         sta mapEnc
@@ -304,6 +344,7 @@ mapGrid:  .res 1024
         stz heroAnim
         stz encAccum
         stz encPend
+        stz textOpq
 
         jsr TextClear
         jsr TextFlush
@@ -520,6 +561,8 @@ spawnOvrY: .res 1
         stz encAccum
         lda #1
         sta encPend
+        lda #ST_BATTLE
+        sta pendingState
 
 @cam:   jsr updateCamera
         jsr OamReset
@@ -681,6 +724,8 @@ spawnOvrY: .res 1
         bra @attr
 @flip:  lda #$60
 @attr:  sta sprAttr
+        lda #1
+        sta sprSize
         jsr OamPush
         rts
 .endproc
