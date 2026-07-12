@@ -498,7 +498,7 @@ MAW_EVENTS = [
 
 # map registry: (name, gridlines, events, tileset, music, encGroup, encRate, spawn)
 MAPS = [
-    ("Lyra Present",  MAP_LYRA,        LYRA_EVENTS,        0, 1, 0, 0, (13, 12)),
+    ("Lyra Present",  MAP_LYRA,        LYRA_EVENTS,        0, 1, 0, 10, (13, 12)),
     ("Middle Ages",   MAP_MIDDLE,      MIDDLE_EVENTS,      0, 1, 1, 14, (13, 10)),
     ("Prehistory",    MAP_PREHIST,     PREHIST_EVENTS,     1, 6, 2, 14, (16, 15)),
     ("Future",        MAP_FUTURE,      FUTURE_EVENTS,      2, 7, 3, 12, (15, 5)),
