@@ -28,8 +28,9 @@ PT_DEF   = 11
 PT_MAG   = 12
 PT_SPD   = 13
 PT_XP    = 14
-.export PT_FLAGS, PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP
-.export PT_ATK, PT_DEF, PT_MAG, PT_SPD, PT_XP
+; battle-record field offsets (plain constants)
+.exportzp PT_FLAGS, PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP
+.exportzp PT_ATK, PT_DEF, PT_MAG, PT_SPD, PT_XP
 
 .segment "HIBSS"
 party:    .res 160              ; 5 * 32

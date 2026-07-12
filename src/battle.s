@@ -16,8 +16,8 @@
 .import PlaySong, PlaySfx
 .import PartyGiveXp, PartyAliveMask
 .import party, invCount, gems
-.import PT_FLAGS, PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP
-.import PT_ATK, PT_DEF, PT_MAG, PT_SPD, PT_XP
+.importzp PT_FLAGS, PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP
+.importzp PT_ATK, PT_DEF, PT_MAG, PT_SPD, PT_XP
 .import HeroBase, HeroNames, SkillTab, HeroTechLists, HeroMagicLists
 .import EnemyTab, EncGroupTab, ItemTab
 .import EnemyObjChr, EnemyPal, BattleGrad

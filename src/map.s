@@ -19,7 +19,7 @@
 .import PartyRecruit, HeroLevelUp, party, invCount
 .import SaveGame
 .import PrintNumR
-.import PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP, PT_FLAGS
+.importzp PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP, PT_FLAGS
 .importzp sprX, sprY, sprTile, sprAttr, sprSize
 .importzp joyHeld, joyPressed, pendingState, frameCount, nmiFlags, textOpq
 .importzp textPtr, textX, textY, textPal
