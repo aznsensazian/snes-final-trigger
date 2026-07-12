@@ -8,6 +8,7 @@
 .export TitleInit, TitleFrame, IntroInit, IntroFrame
 .import TextInit, TextClear, TextPut, TextPutTile, TextFlush, DrawWindow
 .import PartyInit
+.import PlaySong, PlaySfx
 .import TitleChr, TitleChrEnd, TitleMap, TitlePal, TitleGrad
 .importzp textPtr, textX, textY, textPal, textOpq
 .importzp frameCount, joyPressed, joyHeld, pendingState, nmiFlags, shHDMAEN
@@ -65,6 +66,8 @@ introLeft:   .res 1             ; left column for text
         lda #$80
         sta shHDMAEN
 
+        lda #0
+        jsr PlaySong
         stz textOpq
         stz titlePhase
         stz titleCursor
@@ -158,6 +161,8 @@ introLeft:   .res 1             ; left column for text
         beq @done
         ; open menu
         lda #1
+        jsr PlaySfx
+        lda #1
         sta titlePhase
         stz titleCursor
         lda #128
@@ -207,6 +212,8 @@ introLeft:   .res 1             ; left column for text
         lda titleCursor
         eor #1
         sta titleCursor
+        lda #0
+        jsr PlaySfx
 @nocur:
         ; draw cursor hand
         lda #0
@@ -243,6 +250,8 @@ introLeft:   .res 1             ; left column for text
         beq @noA
         lda titleCursor
         bne @cont
+        lda #1
+        jsr PlaySfx
         jsr PartyInit
         lda #ST_INTRO
         sta pendingState
@@ -296,6 +305,8 @@ introLeft:   .res 1             ; left column for text
         lda #V_BG34NBA
         sta BG34NBA
 
+        lda #5
+        jsr PlaySong
         stz textOpq
         stz introPage
         jsr pageStart

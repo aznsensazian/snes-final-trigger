@@ -11,6 +11,7 @@
 .export MapInit, MapFrame, MapLoad, FadeIn, FadeOut
 .import TextInit, TextClear, TextFlush, WaitVBlank, Rand8
 .import OamReset, OamPush, OamFinish
+.import PlaySong, PlaySfx
 .import MapTable, TsChrTable, TsChrSize, TsPalTable, TsMetaTable, TsAttrTable
 .import HeroObjChr, HeroObjChrEnd, ObjPal
 .importzp sprX, sprY, sprTile, sprAttr, sprSize
@@ -23,7 +24,8 @@ ATTR_ENC   = $02
 
 .segment "ZEROPAGE"
 .exportzp curMap, heroX, heroY, heroDir, heroAnim, encAccum, encPend
-.exportzp mapTsId, mapEncGroup, battleReturn
+.exportzp mapTsId, mapEncGroup, battleReturn, mapMusic
+mapMusic:     .res 1
 mapTsId:      .res 1
 mapEncGroup:  .res 1
 battleReturn: .res 1
@@ -86,6 +88,8 @@ mapGrid:  .res 1024
         jsr OamReset
         jsr drawHero
         jsr OamFinish
+        lda mapMusic
+        jsr PlaySong
         jsr WaitVBlank
         jsr FadeIn
         rts
@@ -128,7 +132,8 @@ mapGrid:  .res 1024
         lda [mapPtr]
         sta mapTsId
         ldy #1
-        lda [mapPtr],y          ; music id (used by audio stage)
+        lda [mapPtr],y
+        sta mapMusic
         ldy #2
         lda [mapPtr],y
         sta mapEncGroup
@@ -352,6 +357,8 @@ mapGrid:  .res 1024
         jsr OamReset
         jsr drawHero
         jsr OamFinish
+        lda mapMusic
+        jsr PlaySong
         jsr WaitVBlank
         jsr FadeIn
         rts
@@ -619,6 +626,10 @@ spawnOvrY: .res 1
         cmp lastMy
         bne @next
         ; matched: warp
+        lda #6
+        phx
+        jsr PlaySfx
+        plx
         lda f:mapExits+3,x      ; destX
         sta spawnOvrX
         lda f:mapExits+4,x      ; destY

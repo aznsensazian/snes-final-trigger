@@ -14,6 +14,7 @@
 .import BattleInit, BattleFrame
 .import GameOverInit, GameOverFrame
 .import EndingInit, EndingFrame
+.import AudioInit
 
 .segment "ZEROPAGE"
 .exportzp nmiFlags, gameState, pendingState
@@ -50,6 +51,7 @@ oamHiBuf:     .res 32
         .a8
         .i16
         a8
+        jsr AudioInit
         ; sane scroll defaults: v = -1 so tilemap row 0 is screen row 0
         stz shBG1H
         stz shBG1H+1

@@ -13,6 +13,7 @@
 .import TextClear, TextPut, TextPutTile, TextFlush, DrawWindow
 .import WaitVBlank, Rand8, OamReset, OamPush, OamFinish
 .import PrintNumR, PrintNumL
+.import PlaySong, PlaySfx
 .import PartyGiveXp, PartyAliveMask
 .import party, invCount, gems
 .import PT_FLAGS, PT_LVL, PT_HP, PT_MAXHP, PT_MP, PT_MAXMP
@@ -167,6 +168,8 @@ strGameOver2: .byte "PRESS START", 0
         .a8
         .i16
         ; --- flash effect ---
+        lda #5
+        jsr PlaySfx
         ldx #3
 @fl:    lda #$04
         sta INIDISP
@@ -331,6 +334,8 @@ strGameOver2: .byte "PRESS START", 0
         lda #$0F
         sta INIDISP
 
+        lda #2
+        jsr PlaySong
         lda #BP_INTRO
         sta battlePhase
         lda #40
@@ -1124,6 +1129,8 @@ bSpd: .res 8
         dec
         and #$03
         sta menuSel
+        lda #0
+        jsr PlaySfx
 :       a16
         lda joyPressed
         bit #JOY_DOWN
@@ -1133,6 +1140,8 @@ bSpd: .res 8
         inc
         and #$03
         sta menuSel
+        lda #0
+        jsr PlaySfx
 :       jsr drawMenuCursor
         jsr TextFlush
         ; B = run attempt
@@ -1913,7 +1922,9 @@ lungeTab: .byte 4, 8, 8, 2
         adc f:bGemPool
         sta f:bGemPool
         a8
-@num:   ; print damage number at enemy position
+@num:   lda #3
+        jsr PlaySfx
+        ; print damage number at enemy position
         a16
         lda bAmount
         sta numVal
@@ -2635,6 +2646,8 @@ blinkTab2: .byte 1, 2, 4
 .proc victory
         .a8
         .i16
+        lda #3
+        jsr PlaySong
         jsr redrawBase
         jsr msgWindow
         PUTS 1, 1, 3, strVictory

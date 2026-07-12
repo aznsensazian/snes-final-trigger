@@ -24,3 +24,8 @@ ObjPal:      .incbin "objpal.bin"
 EnemyObjChr: .incbin "obj_enemies.chr"
 EnemyPal:    .incbin "enemypal.bin"
 BattleGrad:  .incbin "battle_grad.bin"
+
+.segment "BANK6"
+.export AudioBin, AudioBinEnd
+AudioBin:    .incbin "audio.bin"
+AudioBinEnd:
