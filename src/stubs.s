@@ -5,17 +5,16 @@
 .include "macros.inc"
 .include "defs.inc"
 
-.export MapInit, MapFrame, BattleInit, BattleFrame
+.export BattleInit, BattleFrame
 .export GameOverInit, GameOverFrame, EndingInit, EndingFrame
 .import TextClear, TextPut, TextFlush
 .importzp textPtr, textX, textY, textPal, shHDMAEN
 
 .segment "CODE"
 
-.proc MapInit
+.proc StubInit
         .a8
         .i16
-        a8
         lda #$80
         sta INIDISP
         stz shHDMAEN
@@ -41,18 +40,18 @@
         rts
 .endproc
 
-.proc MapFrame
+.proc StubFrame
         .a8
         .i16
         rts
 .endproc
 
-BattleInit   = MapInit
-BattleFrame  = MapFrame
-GameOverInit = MapInit
-GameOverFrame = MapFrame
-EndingInit   = MapInit
-EndingFrame  = MapFrame
+BattleInit    = StubInit
+BattleFrame   = StubFrame
+GameOverInit  = StubInit
+GameOverFrame = StubFrame
+EndingInit    = StubInit
+EndingFrame   = StubFrame
 
 .segment "RODATA"
-strWip: .byte "CHAPTER 1 - WIP", 0
+strWip: .byte "UNDER CONSTRUCTION", 0

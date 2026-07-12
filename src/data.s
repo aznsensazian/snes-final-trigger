@@ -14,3 +14,8 @@ TitleChrEnd:
 TitleMap:    .incbin "title_logo.map"
 TitlePal:    .incbin "title_pal.bin"
 TitleGrad:   .incbin "title_grad.bin"
+
+.export HeroObjChr, HeroObjChrEnd, ObjPal
+HeroObjChr:  .incbin "obj_hero.chr"
+HeroObjChrEnd:
+ObjPal:      .incbin "objpal.bin"
