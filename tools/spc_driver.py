@@ -327,7 +327,7 @@ def build_driver(songtab_addr, sfxtab_addr):
 
     a.label("ev_halt")
     a.mov_a_imm(0)
-    a.mov_dpx_a(PTRH)
+    a.mov_dp_a(WPTR + 1)
     a.mov_a_absx("chbit")
     a.or_a_dp(KOF)
     a.mov_dp_a(KOF)
