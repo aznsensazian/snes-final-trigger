@@ -161,6 +161,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.dsp(0x6D, 0xF8)           # ESA (unused, point high)
     a.dsp(0x7D, 0x00)           # EDL
     a.dsp(0x0D, 0x00)           # EFB
+    a.dsp(0x2D, 0x00)           # PMON
     a.dsp(0x3D, 0x00)           # NON
     a.dsp(0x4D, 0x00)           # EON
     a.dsp(0x5C, 0x00)           # KOF clear
