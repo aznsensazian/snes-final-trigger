@@ -127,6 +127,38 @@ class Asm:
         self.mov_dp_imm(0xF2, reg)
         self.mov_dp_a(0xF3)
 
+    def dsp_read(self, reg):
+        """read DSP register (constant reg) into A"""
+        self.mov_dp_imm(0xF2, reg)
+        self.mov_a_dp(0xF3)
+
+    def wait_koff_v0_3(self, retry_label_base):
+        """
+        Poll VxENVX for voices 0-3 until all report 0 (envelope fully released),
+        confirming KOF actually zeroed them. DSP clears KOF too quickly on
+        occasion, so a hardcoded delay is not reliable; this loop is bounded
+        so a stuck voice can't hang the driver.
+        """
+        done_lbl = f"{retry_label_base}_done"
+        loop_lbl = f"{retry_label_base}_loop"
+        self.mov_y_imm(64)          # bounded retry count
+        self.label(loop_lbl)
+        self.dsp_read(0x08)         # V0ENVX
+        self.bne(f"{retry_label_base}_retry")
+        self.dsp_read(0x18)         # V1ENVX
+        self.bne(f"{retry_label_base}_retry")
+        self.dsp_read(0x28)         # V2ENVX
+        self.bne(f"{retry_label_base}_retry")
+        self.dsp_read(0x38)         # V3ENVX
+        self.beq(done_lbl)
+        self.label(f"{retry_label_base}_retry")
+        self.dec_y_hack()
+        self.bne(loop_lbl)
+        self.label(done_lbl)
+
+    def dec_y_hack(self):
+        self.db(0xDC)               # DEC Y
+
     def resolve(self):
         for off, lbl in self.fix_rel:
             target = self.labels[lbl]
@@ -163,6 +195,8 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.dsp(0x0D, 0x00)           # EFB
     a.dsp(0x3D, 0x00)           # NON
     a.dsp(0x4D, 0x00)           # EON
+    a.dsp(0x2D, 0x00)           # PMON: cleared explicitly (undefined at boot; no
+                                # voices should start with pitch modulation on)
     a.dsp(0x5C, 0x00)           # KOF clear
     # clear channel state
     a.mov_x_imm(0)
@@ -326,8 +360,14 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.jmp("fetch")
 
     a.label("ev_halt")
+    # Do NOT write PTRH,x here: do_tick's chloop unconditionally copies
+    # WPTR+1 back into PTRH,x immediately after fetch returns (see the
+    # "write back" block), which would silently undo a zero written to
+    # PTRH,x and let the channel keep playing (issue #2). Instead, zero
+    # the in-flight work pointer's high byte directly so the write-back
+    # itself stores 0 into PTRH,x.
     a.mov_a_imm(0)
-    a.mov_dpx_a(PTRH)
+    a.mov_dp_a(WPTR + 1)
     a.mov_a_absx("chbit")
     a.or_a_dp(KOF)
     a.mov_dp_a(KOF)
@@ -411,6 +451,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     # key off voices 0-3, set default volume
     a.dsp(0x5C, 0x0F)
     a.dsp(0x5C, 0x00)
+    a.wait_koff_v0_3("kf_song")
     a.mov_x_imm(0)
     a.label("svol")
     a.mov_a_absx("chvoice")
@@ -456,6 +497,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.bne("stlp")
     a.dsp(0x5C, 0x0F)
     a.dsp(0x5C, 0x00)
+    a.wait_koff_v0_3("kf_stop")
     a.ret()
 
     # channel -> voice / voice bit tables
