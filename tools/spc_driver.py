@@ -161,6 +161,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.dsp(0x6D, 0xF8)           # ESA (unused, point high)
     a.dsp(0x7D, 0x00)           # EDL
     a.dsp(0x0D, 0x00)           # EFB
+    a.dsp(0x2D, 0x00)           # PMON
     a.dsp(0x3D, 0x00)           # NON
     a.dsp(0x4D, 0x00)           # EON
     a.dsp(0x5C, 0x00)           # KOF clear
@@ -327,7 +328,7 @@ def build_driver(songtab_addr, sfxtab_addr):
 
     a.label("ev_halt")
     a.mov_a_imm(0)
-    a.mov_dpx_a(PTRH)
+    a.mov_dp_a(WPTR + 1)
     a.mov_a_absx("chbit")
     a.or_a_dp(KOF)
     a.mov_dp_a(KOF)
@@ -410,6 +411,16 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.bne("sslp")
     # key off voices 0-3, set default volume
     a.dsp(0x5C, 0x0F)
+    a.mov_dp_imm(0xF2, 0x08)
+    a.label("start_song_envx_wait")
+    a.mov_a_dp(0xF3)
+    a.bne("start_song_envx_wait")
+    a.mov_a_dp(0xF2)
+    a.clrc()
+    a.adc_a_imm(0x10)
+    a.mov_dp_a(0xF2)
+    a.cmp_a_imm(0x48)
+    a.bcc("start_song_envx_wait")
     a.dsp(0x5C, 0x00)
     a.mov_x_imm(0)
     a.label("svol")
@@ -455,6 +466,16 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.cmp_x_imm(4)
     a.bne("stlp")
     a.dsp(0x5C, 0x0F)
+    a.mov_dp_imm(0xF2, 0x08)
+    a.label("stop_music_envx_wait")
+    a.mov_a_dp(0xF3)
+    a.bne("stop_music_envx_wait")
+    a.mov_a_dp(0xF2)
+    a.clrc()
+    a.adc_a_imm(0x10)
+    a.mov_dp_a(0xF2)
+    a.cmp_a_imm(0x48)
+    a.bcc("stop_music_envx_wait")
     a.dsp(0x5C, 0x00)
     a.ret()
 
