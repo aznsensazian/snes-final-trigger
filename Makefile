@@ -48,6 +48,11 @@ build/audio.o: $(AUDIO_ASSETS)
 $(WORLD_ASSETS): tools/gen_world.py tools/tileart.py tools/world_defs.py tools/common.py
 	python3 tools/gen_world.py
 
+# Regenerate all baked assets without doing a full compile/link. The 8
+# generator scripts are independent of each other, so this also benefits
+# from parallel `make -j$(nproc) assets`.
+assets: $(FONT_ASSETS) $(TITLE_ASSETS) $(SPRITE_ASSETS) $(BATTLE_ASSETS) $(BOSS_ASSETS) $(AUDIO_ASSETS) $(WORLD_ASSETS)
+
 build/data.o: $(FONT_ASSETS) $(TITLE_ASSETS) $(SPRITE_ASSETS) $(BATTLE_ASSETS) $(BOSS_ASSETS) $(AUDIO_ASSETS)
 
 build/world.o: assets/world.s $(WORLD_ASSETS) | build
