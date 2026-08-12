@@ -57,6 +57,20 @@
         sta MDMAEN
 .endmacro
 
+; Widen an 8-bit byte value to 16-bit and multiply by 3 (table index for
+; 3-byte-per-entry tables, e.g. long pointer tables). Input: 8-bit value
+; already loaded in A (accumulator 8-bit on entry). Output: X = value*3,
+; A left 16-bit. Clobbers A/tmp0, assumes tmp0 is available as scratch.
+.macro WidenMul3
+        a16
+        and #$00FF
+        sta tmp0
+        asl
+        clc
+        adc tmp0
+        tax
+.endmacro
+
 ; DMA a block to CGRAM. args: source, starting color index, byte count
 .macro DmaToCgram src, cstart, count
         a8

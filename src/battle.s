@@ -194,25 +194,14 @@ strGameOver2: .byte "PRESS START", 0
 
         ; --- build ground strip tilemap in sceneBuf ---
         ; get metatile defs ptr for current tileset: TsMetaTable + ts*3
-        a16
-        lda #0
-        a8
         lda mapTsId
-        a16
-        sta tmp0
-        asl
-        clc
-        adc tmp0
-        tax
+        WidenMul3
         lda f:TsMetaTable,x
         sta tmp1                ; meta base (bank = same as table entries)
         a8
         lda f:TsMetaTable+2,x
         sta tmp2                ; bank in tmp2 low
         ; hedge meta id -> tmp3, ground -> tmp4
-        a16
-        lda #0
-        a8
         lda mapTsId
         a16
         and #$00FF
