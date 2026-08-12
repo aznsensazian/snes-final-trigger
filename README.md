@@ -72,6 +72,8 @@ does not need it).
 
 ```sh
 make            # regenerates all assets and links finaltrigger.sfc
+make -j$(nproc) # same, but parallelized (asset generators + .o rules are independent)
+make assets     # regenerate baked assets only, without compiling/linking
 make clean
 ```
 
