@@ -8,12 +8,12 @@
 .include "macros.inc"
 .include "audio.inc"
 
-.export AudioInit, PlaySong, PlaySfx, StopMusic
+.export AudioInit, PlaySong, PlaySfx, StopMusic, AudioGetError, AudioClearError
 .import AudioBin, AudioBinEnd
 
 .segment "ZEROPAGE"
 spcSeq:  .res 1                 ; rolling high nibble
-sfxCool: .res 1                 ; unused reserve
+audioErr: .res 1                ; sticky: nonzero if last sendCmd never got acked
 
 .segment "CODE"
 
@@ -65,15 +65,23 @@ sfxCool: .res 1                 ; unused reserve
         bne @j
 
         stz spcSeq
+        stz audioErr
         stz APUIO0              ; settle port0 at 0 so first command differs
         rts
 .endproc
 
 ; ---------------------------------------------------------------------------
 ; internal: send command (low nibble in tmp) with param A.
+; On timeout, retries the send once before giving up; if it still doesn't
+; see an echo ack, sets the sticky audioErr flag so callers/watchdogs can
+; detect a desynced SPC link instead of silently pressing on.
 .proc sendCmd
         .a8
         .i16
+        pha                     ; save param for possible retry
+        ldy #0                  ; attempt counter (0 = first try, 1 = retry)
+@try:   pla
+        pha
         sta APUIO1              ; param
         lda spcSeq
         clc
@@ -89,13 +97,37 @@ sfxCool: .res 1                 ; unused reserve
         beq @done
         dex
         bne @w
-@done:  rts
+        ; timed out: retry once, then give up and flag the desync
+        cpy #0
+        bne @fail
+        iny
+        bra @try
+@fail:  lda #$01
+        sta audioErr
+@done:  pla
+        rts
 .endproc
 
 .segment "ZEROPAGE"
 cmdNib: .res 1
 
 .segment "CODE"
+
+; ---------------------------------------------------------------------------
+; Returns nonzero in A if the last sendCmd ultimately failed to get an ack.
+.proc AudioGetError
+        .a8
+        lda audioErr
+        rts
+.endproc
+
+; ---------------------------------------------------------------------------
+; Clears the sticky audio error flag.
+.proc AudioClearError
+        .a8
+        stz audioErr
+        rts
+.endproc
 
 .proc PlaySong
         .a8
