@@ -68,6 +68,16 @@ class Asm:
     def mov_a_indy(self, d):     self.db(0xF7, d)      # MOV A,[dp]+Y
     def mov_dp_a(self, d):       self.db(0xC4, d)
     def mov_dpx_a(self, d):      self.db(0xD4, d)
+
+    def fetch_byte(self, wptr, dest=None):
+        """Fetch the next stream byte via [wptr]+Y (Y assumed 0), advance
+        wptr past it, and optionally stash the fetched byte in a direct
+        page slot. Common idiom shared by fetch/ev_inst/ev_vol/dur."""
+        self.mov_a_indy(wptr)
+        self.incw_dp(wptr)
+        if dest is not None:
+            self.mov_dp_a(dest)
+
     def mov_dp_imm(self, d, v):  self.db(0x8F, v, d)
     def mov_dp_dp(self, dst, src): self.db(0xFA, src, dst)
     def mov_a_x(self):           self.db(0x7D)
@@ -263,8 +273,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     # ===== fetch: decode events until a wait is set =====
     a.label("fetch")
     a.mov_y_imm(0)
-    a.mov_a_indy(WPTR)
-    a.incw_dp(WPTR)
+    a.fetch_byte(WPTR)
     a.cmp_a_imm(0xFF)
     a.beq("t_end")
     a.cmp_a_imm(0xFE)
@@ -314,8 +323,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.mov_dp_a(KOF)
     a.label("dur")
     a.mov_y_imm(0)
-    a.mov_a_indy(WPTR)
-    a.incw_dp(WPTR)
+    a.fetch_byte(WPTR)
     a.mov_dpx_a(WAIT)
     a.ret()
 
@@ -337,9 +345,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.ret()
 
     a.label("ev_inst")
-    a.mov_a_indy(WPTR)
-    a.incw_dp(WPTR)
-    a.mov_dp_a(TMP)             # inst id
+    a.fetch_byte(WPTR, TMP)     # inst id
     # SRCN = (v<<4)|4
     a.mov_a_absx("chvoice")
     a.xcn_a()
@@ -366,9 +372,7 @@ def build_driver(songtab_addr, sfxtab_addr):
     a.jmp("fetch")
 
     a.label("ev_vol")
-    a.mov_a_indy(WPTR)
-    a.incw_dp(WPTR)
-    a.mov_dp_a(TMP)
+    a.fetch_byte(WPTR, TMP)
     a.mov_a_absx("chvoice")
     a.xcn_a()
     a.mov_dp_a(0xF2)            # VOLL
