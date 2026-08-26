@@ -800,6 +800,91 @@ ptrScr: .res 3
         sta textY
         jsr PrintNumR
         plx
+        phx
+        ; HP bar: 4 segments at cols 28-31, filled proportional to cur/max HP.
+        ; segCount = HP*4 / MAXHP (0..4), clamped.
+        a16
+        lda f:party+PT_HP,x
+        sta tmp5                ; tmp5 = HP (word)
+        asl
+        asl                     ; HP*4
+        sta tmp6                ; tmp6 = HP*4 (word), may need >8bit div
+        lda f:party+PT_MAXHP,x
+        sta tmp7                ; tmp7 = MAXHP (word)
+        a8
+        ; if MAXHP == 0, segCount = 0 (shouldn't happen)
+        lda tmp7
+        ora tmp7+1
+        bne @haveMax
+        stz numVal
+        bra @segReady
+@haveMax:
+        ; simple repeated-subtraction divide: tmp6 / tmp7 -> numVal (0..4)
+        a16
+        lda tmp6
+        a8
+        stz numVal
+@divlp: a16
+        lda tmp6
+        cmp tmp7
+        bcc @divdone
+        sec
+        sbc tmp7
+        sta tmp6
+        a8
+        inc numVal
+        lda numVal
+        cmp #4
+        bcs @divdone
+        bra @divlp
+@divdone:
+        a8
+@segReady:
+        ; color: green if HP > 25% of max, else red. Dead (HP=0) shows all empty.
+        a16
+        lda f:party+PT_HP,x
+        a8
+        beq @deadBar
+        ; low-hp threshold: HP*4 < MAXHP -> under 25%
+        a16
+        lda tmp5
+        asl
+        asl
+        cmp tmp7
+        a8
+        bcs @barGreen
+        lda #5                  ; red
+        bra @barCol
+@barGreen:
+        lda #4                  ; green
+@barCol: sta tmp1                ; tmp1 = fill palette
+        bra @drawBar
+@deadBar:
+        lda #5
+        sta tmp1
+@drawBar:
+        lda #28
+        sta textX
+        lda tmp4
+        sta textY
+        ldy #0
+@barlp: cpy numVal
+        bcs @barEmpty
+        lda tmp1
+        sta textPal
+        lda #TILE_BARFULL
+        bra @barPut
+@barEmpty:
+        lda #2                  ; dim gray palette for empty segment
+        sta textPal
+        lda #TILE_BAREMPTY
+@barPut:
+        jsr TextPutTile
+        inc textX
+        iny
+        cpy #4
+        bne @barlp
+        plx
 @next:  a16
         txa
         clc
