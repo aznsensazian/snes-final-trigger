@@ -140,13 +140,7 @@ mapGrid:  .res 1024
         a8
         pla
         sta curMap
-        a16
-        and #$00FF
-        sta tmp0
-        asl
-        clc
-        adc tmp0
-        tax
+        WidenMul3
         lda f:MapTable,x
         sta mapPtr
         a8
@@ -192,16 +186,8 @@ mapGrid:  .res 1024
         cpx tmp0
         bne @exlp
 @noex:
-        ; grid offset = 8 + exitCnt*8
-        a16
-        lda #0
-        a8
-        lda exitCnt
-        a16
-        and #$00FF
-        asl
-        asl
-        asl
+        ; grid offset = 8 + exitCnt*8 (reuse exitCnt*8 already computed above in tmp0)
+        lda tmp0
         clc
         adc #8
         sta gridOff
@@ -256,13 +242,8 @@ mapGrid:  .res 1024
 
         ; ---- tileset chr/pal/attr (tileset id at header +0) ----
         lda [mapPtr]            ; tileset id
-        a16
-        and #$00FF
-        sta tmp0
-        asl
-        clc
-        adc tmp0
-        tax                     ; id*3
+        WidenMul3
+                                ; id*3
         ; chr
         lda f:TsChrTable,x
         sta A1T0L
