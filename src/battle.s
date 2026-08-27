@@ -105,6 +105,7 @@ strLevelUp:  .byte " grew stronger!", 0
 strFury:     .byte "unleashes fury!", 0
 strGameOver1: .byte "The timeline fades to void.", 0
 strGameOver2: .byte "PRESS START", 0
+zeroWord:    .word $0000            ; fixed-source for WRAM-clear DMA
 
 .segment "CODE"
 
@@ -212,15 +213,31 @@ strGameOver2: .byte "PRESS START", 0
         lda f:TsGroundMeta,x
         sta tmp4
 
-        ; clear sceneBuf
+        ; clear sceneBuf via WRAM-port DMA (fixed 1-byte source -> WMDATA,
+        ; which auto-increments its own internal WRAM pointer). Avoids the
+        ; ~2K-iteration CPU loop that used to run on every battle init.
         a16
-        ldx #0
-        lda #$0000
-@cl:    sta f:sceneBuf,x
-        inx
-        inx
-        cpx #2048
-        bne @cl
+        lda #.loword(sceneBuf)
+        sta WMADDL              ; WMADDL/M = 16-bit offset within WRAM bank
+        a8
+        lda #(^sceneBuf - $7E)  ; WMADDH bit0 selects WRAM bank $7E/$7F
+        sta WMADDH
+        lda #$08                ; fixed source address, transfer mode 0
+        sta DMAP0
+        lda #$80                ; B-bus target $2180 (WMDATA)
+        sta BBAD0
+        a16
+        lda #.loword(zeroWord)
+        sta A1T0L
+        a8
+        lda #^zeroWord
+        sta A1B0
+        a16
+        lda #2048
+        sta DAS0L
+        a8
+        lda #$01
+        sta MDMAEN
 
         ; helper values: row byte offsets
         ; hedge rows 18,19 ; ground rows 20..27
