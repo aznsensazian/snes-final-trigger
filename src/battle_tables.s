@@ -133,6 +133,7 @@ EnemyTab:
         ENEMY "Deep Shade",120, 20, 12, 0, 9,  45, 25, 2, 0, 2   ; 18
         ENEMY "Void Spawn",200, 30, 18, 0, 12, 90, 60, 0, 0, 2   ; 19
         ENEMY "Time Leech",240, 34, 20, 0, 10, 110, 70, 2, 0, 1  ; 20
+        ENEMY "Imp",       150, 24, 10, 16, 15, 65, 45, 3, 0, 1  ; 21 winged demon, magic-focused
 
 ; --- encounter groups ----------------------------------------------------------
 ; group: count, then count * 3 enemy ids ($FF = empty slot)
@@ -174,12 +175,13 @@ Grp4:   .byte 6
         .byte 18, $FF, $FF
         .byte 18, 17, $FF
         .byte 18, 18, $FF
-Grp5:   .byte 5
+Grp5:   .byte 6
         .byte 19, $FF, $FF
         .byte 19, 19, $FF
         .byte 20, $FF, $FF
         .byte 20, 19, $FF
         .byte 20, 20, $FF
+        .byte 21, 20, $FF
 
 ; boss formations: 3 enemy ids each
 .export BossFormTab
