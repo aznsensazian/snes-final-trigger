@@ -2390,6 +2390,15 @@ hNumRow: .byte 5, 8, 12, 15, 18
         a8
         lda a:12,y
         sta tmp1                ; flags
+        ; magic-cast SFX cue: play the shimmer arpeggio whenever this
+        ; skill uses the SK_MAG formula, so Magic actions have a
+        ; distinct audible identity from plain Tech attacks.
+        lda tmp1
+        and #SK_MAG
+        beq :+
+        lda #8
+        jsr PlaySfx
+:
         a16
         lda #0
         a8

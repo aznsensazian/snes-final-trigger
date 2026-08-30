@@ -308,8 +308,16 @@ def sfx_levelup():
     return stream([("i", 0), ("v", 40), ("C5", 4), ("E5", 4), ("G5", 4),
                    ("C6", 10)], loop=False)
 
+def sfx_magic():
+    # bright ascending arpeggio + shimmer tail for spell casts, distinct
+    # from the plain melodic sfx_heal cue so Magic actions read as
+    # "casting" rather than "recovering".
+    return stream([("i", 2), ("v", 42), ("C5", 2), ("E5", 2), ("G5", 2),
+                   ("C6", 2), ("E6", 3), ("i", 0), ("v", 30), ("G6", 5)],
+                  loop=False)
+
 SFX = [sfx_cursor, sfx_confirm, sfx_cancel, sfx_hit, sfx_heal,
-       sfx_encounter, sfx_gate, sfx_levelup]
+       sfx_encounter, sfx_gate, sfx_levelup, sfx_magic]
 
 # ---------------------------------------------------------------------------
 def main():
@@ -351,7 +359,7 @@ def main():
         sfx_ptrs.append(ptr)
         blobs.append(bytearray(s))
         ptr += len(s)
-    while len(sfx_ptrs) < 8:
+    while len(sfx_ptrs) < 9:
         sfx_ptrs.append(0)
 
     # samples
