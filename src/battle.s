@@ -2513,6 +2513,8 @@ hNumRow: .byte 5, 8, 12, 15, 18
         lda a:bTgtIds,y
         sta tmp5
         jsr healHero
+        lda #4
+        jsr PlaySfx
         lda #30
         jsr animWait
         jmp finishAction
@@ -2542,7 +2544,9 @@ hNumRow: .byte 5, 8, 12, 15, 18
         jsr healHero
         inc tmp4
         bra @hal
-@hald:  lda #30
+@hald:  lda #4
+        jsr PlaySfx
+        lda #30
         jsr animWait
         jmp finishAction
 .endproc
@@ -2639,12 +2643,16 @@ hNumRow: .byte 5, 8, 12, 15, 18
         sta f:party+PT_MP,x
         a8
         jsr healNum
+        lda #4
+        jsr PlaySfx
         bra @done
 @hp:    a16
         lda a:12,y              ; power
         sta bAmount
         a8
         jsr healHero
+        lda #4
+        jsr PlaySfx
         bra @done
 @mp:    a16
         lda a:12,y
@@ -2660,6 +2668,8 @@ hNumRow: .byte 5, 8, 12, 15, 18
         sta bAmount
         a8
         jsr healNum
+        lda #4
+        jsr PlaySfx
         bra @done
 @revive:
         a16
@@ -2669,6 +2679,8 @@ hNumRow: .byte 5, 8, 12, 15, 18
         sta bAmount
         a8
         jsr healNum
+        lda #4
+        jsr PlaySfx
 @done:  lda #30
         jsr animWait
         jmp finishAction
