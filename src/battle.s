@@ -105,6 +105,7 @@ strLevelUp:  .byte " grew stronger!", 0
 strFury:     .byte "unleashes fury!", 0
 strGameOver1: .byte "The timeline fades to void.", 0
 strGameOver2: .byte "PRESS START", 0
+strMiss:     .byte "Miss!", 0
 
 .segment "CODE"
 
@@ -2114,6 +2115,14 @@ lungeTab: .byte 4, 8, 8, 2
 .proc dmgToEnemy
         .a8
         .i16
+        ; miss check: ~1/16 chance to whiff (adds tension/depth to combat)
+        jsr Rand8
+        and #$0F
+        cmp #1
+        bne @noMiss
+        jsr enemyMiss
+        rts
+@noMiss:
         ; hp -= amount
         a16
         lda #0
@@ -2186,6 +2195,40 @@ lungeTab: .byte 4, 8, 8, 2
         rts
 eNumCol: .byte 5, 8, 5
 eNumRow: .byte 5, 10, 15
+.endproc
+
+; print "Miss!" at target enemy slot (tmp5), play miss sfx
+.proc enemyMiss
+        .a8
+        .i16
+        lda #8
+        jsr PlaySfx
+        a16
+        lda #0
+        a8
+        lda tmp5
+        a16
+        and #$00FF
+        tay
+        a8
+        lda a:dmgToEnemy::eNumCol,y
+        sta textX
+        lda a:dmgToEnemy::eNumRow,y
+        sta textY
+        lda #0
+        sta textPal
+        stz textOpq
+        a16
+        lda #.loword(strMiss)
+        sta textPtr
+        a8
+        lda #^strMiss
+        sta textPtr+2
+        jsr TextPut
+        lda #128
+        sta textOpq
+        jsr TextFlush
+        rts
 .endproc
 
 ; ---------------------------------------------------------------------------

@@ -308,8 +308,13 @@ def sfx_levelup():
     return stream([("i", 0), ("v", 40), ("C5", 4), ("E5", 4), ("G5", 4),
                    ("C6", 10)], loop=False)
 
+def sfx_miss():
+    # airy, deflated whiff: quick descending noise blip, low volume
+    return stream([("i", 3), ("v", 22), ("A3", 3), ("F3", 3), ("D3", 5)],
+                  loop=False)
+
 SFX = [sfx_cursor, sfx_confirm, sfx_cancel, sfx_hit, sfx_heal,
-       sfx_encounter, sfx_gate, sfx_levelup]
+       sfx_encounter, sfx_gate, sfx_levelup, sfx_miss]
 
 # ---------------------------------------------------------------------------
 def main():
@@ -351,7 +356,7 @@ def main():
         sfx_ptrs.append(ptr)
         blobs.append(bytearray(s))
         ptr += len(s)
-    while len(sfx_ptrs) < 8:
+    while len(sfx_ptrs) < 9:
         sfx_ptrs.append(0)
 
     # samples
