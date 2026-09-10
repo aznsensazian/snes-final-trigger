@@ -28,45 +28,50 @@ HeroNames:                       ; 6 bytes each, NUL-padded
         .byte "NIX", 0, 0, 0
 
 ; --- skills: 16 bytes each ----------------------------------------------------
-; +0..9 name(10,NUL-pad) +10 mpCost +11 power +12 flags +13..15 pad
+; +0..9 name(10,NUL-pad) +10 mpCost +11 power +12 flags +13 elem +14..15 pad
 ; flags: bit0 all-targets, bit1 heal, bit2 magic formula, bit3 targets allies
+; elem: 0=none/physical, 1=fire, 2=ice, 3=bolt (used vs. enemy ELEM_WEAK)
 .export SkillTab
 SK_ALL   = $01
 SK_HEAL  = $02
 SK_MAG   = $04
 SK_ALLY  = $08
-.macro SKILL name, mp, pow, flags
+ELEM_NONE = 0
+ELEM_FIRE = 1
+ELEM_ICE  = 2
+ELEM_BOLT = 3
+.macro SKILL name, mp, pow, flags, elem
         .local n
 n:      .byte name
         .res 10-(*-n), 0
-        .byte mp, pow, flags, 0, 0, 0
+        .byte mp, pow, flags, elem, 0, 0
 .endmacro
 
 SkillTab:
-        SKILL "Cyclone",    4,  35, 0                       ; 0
-        SKILL "Volt Slash", 8,  70, 0                       ; 1
-        SKILL "CrimsnWave", 14, 60, SK_ALL                  ; 2
-        SKILL "Cleave",     5,  42, 0                       ; 3
-        SKILL "QuakeBreak", 10, 80, 0                       ; 4
-        SKILL "TitanSmash", 16, 70, SK_ALL                  ; 5
-        SKILL "Pounce",     4,  38, 0                       ; 6
-        SKILL "WildFrenzy", 12, 85, 0                       ; 7
-        SKILL "PrimalRoar", 18, 65, SK_ALL                  ; 8
-        SKILL "Aura Heal",  6,  55, SK_HEAL|SK_ALLY         ; 9
-        SKILL "Starfall",   15, 75, SK_MAG|SK_ALL           ; 10
-        SKILL "ShadowFang", 7,  60, SK_MAG                  ; 11
-        SKILL "Void Pulse", 15, 72, SK_MAG|SK_ALL           ; 12
-        SKILL "Fire",       5,  45, SK_MAG                  ; 13
-        SKILL "Fira",       12, 95, SK_MAG                  ; 14
-        SKILL "Firaga",     24, 170, SK_MAG                 ; 15
-        SKILL "Cure",       5,  65, SK_HEAL|SK_ALLY         ; 16
-        SKILL "Cura",       13, 150, SK_HEAL|SK_ALLY        ; 17
-        SKILL "Ice",        5,  48, SK_MAG                  ; 18
-        SKILL "Bolt",       5,  50, SK_MAG                  ; 19
-        SKILL "Icera",      12, 100, SK_MAG                 ; 20
-        SKILL "Boltra",     12, 105, SK_MAG                 ; 21
-        SKILL "Doom Flare", 30, 200, SK_MAG|SK_ALL          ; 22
-        SKILL "Heal All",   20, 90, SK_HEAL|SK_ALLY|SK_ALL  ; 23
+        SKILL "Cyclone",    4,  35, 0, ELEM_NONE                       ; 0
+        SKILL "Volt Slash", 8,  70, 0, ELEM_NONE                       ; 1
+        SKILL "CrimsnWave", 14, 60, SK_ALL, ELEM_NONE                  ; 2
+        SKILL "Cleave",     5,  42, 0, ELEM_NONE                       ; 3
+        SKILL "QuakeBreak", 10, 80, 0, ELEM_NONE                       ; 4
+        SKILL "TitanSmash", 16, 70, SK_ALL, ELEM_NONE                  ; 5
+        SKILL "Pounce",     4,  38, 0, ELEM_NONE                       ; 6
+        SKILL "WildFrenzy", 12, 85, 0, ELEM_NONE                       ; 7
+        SKILL "PrimalRoar", 18, 65, SK_ALL, ELEM_NONE                  ; 8
+        SKILL "Aura Heal",  6,  55, SK_HEAL|SK_ALLY, ELEM_NONE         ; 9
+        SKILL "Starfall",   15, 75, SK_MAG|SK_ALL, ELEM_NONE           ; 10
+        SKILL "ShadowFang", 7,  60, SK_MAG, ELEM_NONE                  ; 11
+        SKILL "Void Pulse", 15, 72, SK_MAG|SK_ALL, ELEM_NONE           ; 12
+        SKILL "Fire",       5,  45, SK_MAG, ELEM_FIRE                  ; 13
+        SKILL "Fira",       12, 95, SK_MAG, ELEM_FIRE                  ; 14
+        SKILL "Firaga",     24, 170, SK_MAG, ELEM_FIRE                 ; 15
+        SKILL "Cure",       5,  65, SK_HEAL|SK_ALLY, ELEM_NONE         ; 16
+        SKILL "Cura",       13, 150, SK_HEAL|SK_ALLY, ELEM_NONE        ; 17
+        SKILL "Ice",        5,  48, SK_MAG, ELEM_ICE                   ; 18
+        SKILL "Bolt",       5,  50, SK_MAG, ELEM_BOLT                  ; 19
+        SKILL "Icera",      12, 100, SK_MAG, ELEM_ICE                  ; 20
+        SKILL "Boltra",     12, 105, SK_MAG, ELEM_BOLT                 ; 21
+        SKILL "Doom Flare", 30, 200, SK_MAG|SK_ALL, ELEM_NONE          ; 22
+        SKILL "Heal All",   20, 90, SK_HEAL|SK_ALLY|SK_ALL, ELEM_NONE  ; 23
 
 ; --- per-hero tech/magic lists -------------------------------------------------
 ; format: count, then count * {skillId, unlockLevel}
@@ -96,9 +101,10 @@ NixM:   .byte 5
 
 ; --- enemies: 24 bytes each ---------------------------------------------------
 ; +0..9 name +10 maxhp(w) +12 atk +13 def +14 mag +15 spd
-; +16 xp(w) +18 gems(w) +20 spriteId +21 aiType +22 palSlot +23 pad
+; +16 xp(w) +18 gems(w) +20 spriteId +21 aiType +22 palSlot +23 elemWeak
+; elemWeak: 0=none, 1=fire, 2=ice, 3=bolt (1.5x dmg from matching skill elem)
 .export EnemyTab
-.macro ENEMY name, hp, atk, def, mag, spd, xp, gems, spr, ai, pal
+.macro ENEMY name, hp, atk, def, mag, spd, xp, gems, spr, ai, pal, weak
         .local n
 n:      .byte name
         .res 10-(*-n), 0
@@ -106,33 +112,33 @@ n:      .byte name
         .byte atk, def, mag, spd
         .word xp
         .word gems
-        .byte spr, ai, pal, 0
+        .byte spr, ai, pal, weak
 .endmacro
 
 EnemyTab:
-        ENEMY "Gobkin",    30,  7, 4, 0, 5,   8,  6, 0, 0, 0    ; 0
-        ENEMY "Fang Wolf", 50, 12, 5, 0, 9,  13,  9, 1, 0, 0    ; 1
-        ENEMY "Mud Slime", 72,  8, 9, 0, 3,  11,  8, 2, 0, 0    ; 2
+        ENEMY "Gobkin",    30,  7, 4, 0, 5,   8,  6, 0, 0, 0, ELEM_FIRE    ; 0
+        ENEMY "Fang Wolf", 50, 12, 5, 0, 9,  13,  9, 1, 0, 0, ELEM_ICE     ; 1
+        ENEMY "Mud Slime", 72,  8, 9, 0, 3,  11,  8, 2, 0, 0, ELEM_BOLT    ; 2
         ; --- bosses (spr = $80|artIdx, pal = boss palette id) ---
-        ENEMY "GRASK",      420, 16, 9, 0, 7,  120,  80, $80, 1, 0   ; 3
-        ENEMY "MAGMADON",   700, 22, 13, 0, 6, 260, 150, $81, 1, 1   ; 4
-        ENEMY "STL WARDEN", 1050, 30, 17, 0, 10, 500, 300, $82, 1, 2 ; 5
-        ENEMY "TERRA WYRM", 1500, 38, 20, 0, 9, 900, 500, $83, 1, 3  ; 6
-        ENEMY "XETHUL",     2800, 48, 24, 0, 12, 2000, 999, $84, 2, 4 ; 7
-        ENEMY "CHRONOWYRM", 4000, 58, 28, 0, 14, 3000, 999, $83, 2, 5 ; 8
-        ENEMY "OMEGAGOLEM", 3600, 64, 34, 0, 8, 2600, 999, $82, 2, 6  ; 9
+        ENEMY "GRASK",      420, 16, 9, 0, 7,  120,  80, $80, 1, 0, ELEM_BOLT   ; 3
+        ENEMY "MAGMADON",   700, 22, 13, 0, 6, 260, 150, $81, 1, 1, ELEM_ICE    ; 4
+        ENEMY "STL WARDEN", 1050, 30, 17, 0, 10, 500, 300, $82, 1, 2, ELEM_BOLT ; 5
+        ENEMY "TERRA WYRM", 1500, 38, 20, 0, 9, 900, 500, $83, 1, 3, ELEM_ICE   ; 6
+        ENEMY "XETHUL",     2800, 48, 24, 0, 12, 2000, 999, $84, 2, 4, ELEM_NONE ; 7
+        ENEMY "CHRONOWYRM", 4000, 58, 28, 0, 14, 3000, 999, $83, 2, 5, ELEM_NONE ; 8
+        ENEMY "OMEGAGOLEM", 3600, 64, 34, 0, 8, 2600, 999, $82, 2, 6, ELEM_BOLT ; 9
         ; --- era enemies (palette-swap variants) ---
-        ENEMY "Raptor",     65, 14, 6, 0, 12,  20, 12, 1, 0, 1   ; 10
-        ENEMY "Lava Bug",   55, 16, 4, 0, 8,   18, 10, 0, 0, 1   ; 11
-        ENEMY "Stone Ape",  95, 18, 10, 0, 6,  26, 16, 2, 0, 2   ; 12
-        ENEMY "ScrapDrone", 90, 22, 12, 0, 14, 40, 30, 0, 0, 2   ; 13
-        ENEMY "Sec-Bot",   130, 26, 16, 0, 10, 55, 40, 1, 0, 2   ; 14
-        ENEMY "Toxic Ooze",160, 20, 18, 0, 6,  50, 35, 2, 0, 0   ; 15
-        ENEMY "Cave Bat",   45, 12, 5, 0, 13,  16, 10, 1, 0, 0   ; 16
-        ENEMY "Crawler",    80, 16, 9, 0, 7,   24, 14, 0, 0, 0   ; 17
-        ENEMY "Deep Shade",120, 20, 12, 0, 9,  45, 25, 2, 0, 2   ; 18
-        ENEMY "Void Spawn",200, 30, 18, 0, 12, 90, 60, 0, 0, 2   ; 19
-        ENEMY "Time Leech",240, 34, 20, 0, 10, 110, 70, 2, 0, 1  ; 20
+        ENEMY "Raptor",     65, 14, 6, 0, 12,  20, 12, 1, 0, 1, ELEM_ICE   ; 10
+        ENEMY "Lava Bug",   55, 16, 4, 0, 8,   18, 10, 0, 0, 1, ELEM_ICE   ; 11
+        ENEMY "Stone Ape",  95, 18, 10, 0, 6,  26, 16, 2, 0, 2, ELEM_FIRE  ; 12
+        ENEMY "ScrapDrone", 90, 22, 12, 0, 14, 40, 30, 0, 0, 2, ELEM_BOLT  ; 13
+        ENEMY "Sec-Bot",   130, 26, 16, 0, 10, 55, 40, 1, 0, 2, ELEM_BOLT  ; 14
+        ENEMY "Toxic Ooze",160, 20, 18, 0, 6,  50, 35, 2, 0, 0, ELEM_FIRE  ; 15
+        ENEMY "Cave Bat",   45, 12, 5, 0, 13,  16, 10, 1, 0, 0, ELEM_BOLT  ; 16
+        ENEMY "Crawler",    80, 16, 9, 0, 7,   24, 14, 0, 0, 0, ELEM_FIRE  ; 17
+        ENEMY "Deep Shade",120, 20, 12, 0, 9,  45, 25, 2, 0, 2, ELEM_NONE  ; 18
+        ENEMY "Void Spawn",200, 30, 18, 0, 12, 90, 60, 0, 0, 2, ELEM_ICE   ; 19
+        ENEMY "Time Leech",240, 34, 20, 0, 10, 110, 70, 2, 0, 1, ELEM_FIRE ; 20
 
 ; --- encounter groups ----------------------------------------------------------
 ; group: count, then count * 3 enemy ids ($FF = empty slot)

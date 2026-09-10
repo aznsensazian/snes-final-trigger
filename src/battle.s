@@ -2062,6 +2062,7 @@ blinkTab: .byte 1, 2, 4
 bActSlot: .res 1                ; acting enemy slot
 bVictim:  .res 1                ; enemy attack target (hero index)
 bAmount:  .res 2                ; damage/heal amount scratch
+actElem:  .res 1                ; current skill's element (0=none/physical)
 .segment "CODE"
 
 ; short blocking delay with sprite redraw: A = frames
@@ -2308,6 +2309,7 @@ hNumRow: .byte 5, 8, 12, 15, 18
         jmp doSkill
 :       jmp doItem
 @attack:
+        stz actElem
         ; damage = atk*2 + rnd&7 - enemyDef
         a16
         lda #0
@@ -2390,6 +2392,8 @@ hNumRow: .byte 5, 8, 12, 15, 18
         a8
         lda a:12,y
         sta tmp1                ; flags
+        lda a:13,y
+        sta actElem             ; element
         a16
         lda #0
         a8
@@ -2548,6 +2552,7 @@ hNumRow: .byte 5, 8, 12, 15, 18
 .endproc
 
 ; subtract target enemy's def from bAmount (tmp5 = slot), min 1
+; then apply 1.5x elemental weakness bonus if actElem matches enemy's weak elem
 .proc applyEnemyDef
         .a8
         .i16
@@ -2577,7 +2582,20 @@ hNumRow: .byte 5, 8, 12, 15, 18
         lda #1
 :       sta bAmount
         a8
-        rts
+        ; elemental weakness check
+        lda actElem
+        beq @done               ; physical/none: no elem bonus
+        lda a:23,y              ; enemy elemWeak
+        cmp actElem
+        bne @done
+        a16
+        lda bAmount
+        lsr                     ; half
+        clc
+        adc bAmount             ; base + half = 1.5x
+        sta bAmount
+        a8
+@done:  rts
 .endproc
 
 ; ---------------------------------------------------------------------------
