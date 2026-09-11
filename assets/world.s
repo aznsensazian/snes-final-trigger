@@ -53,41 +53,46 @@ Map9: .incbin "map9.bin"
 .segment "BANK8"
 .export StoryTab
 Str0: .byte "Miner:", 1, "The caverns below Lyra rumble.", 1, "Something huge stirs there...", 0
-Str1: .byte "Carved above the arch:", 1, "HERE SLEEPS THE SHAPER", 1, "OF VALLEYS. DIG NOT DEEP.", 0
-Str2: .byte "Found an Elixir!", 0
-Str3: .byte "Found an Ether!", 0
-Str4: .byte "Found a Hi-Potion!", 0
-Str5: .byte "Found a Potion!", 0
-Str6: .byte "Found a Revive!", 0
-Str7: .byte "CHRONO WYRM:", 1, "*A serpent of pure paradox", 1, "coils through the void*", 0
-Str8: .byte "The paradox dissolves!", 1, "The Rift feels calmer now.", 0
-Str9: .byte "Flickering terminal:", 1, "...year 2300... Xethul event...", 1, "all cities lost... the Crystal", 1, "is our last power source...", 0
-Str10: .byte "The time gate crackles...", 1, "The crystals' song pulls you", 1, "through the ages!", 0
-Str11: .byte "GRASK, WARDEN OF TIDES:", 1, "WHO DARES CLAIM THE", 1, "WATER CRYSTAL?!", 0
-Str12: .byte "The WATER CRYSTAL is yours!", 1, "Its light hums with the tide.", 0
-Str13: .byte "A shard of crystal light", 1, "washes over the party.", 1, "HP and MP restored!", 0
-Str14: .byte "Knight:", 1, "Fiends spill from the Crystal", 1, "Cave. Our blades cannot cut", 1, "their hides!", 0
-Str15: .byte "MAGMADON:", 1, "*The volcano itself seems", 1, "to rise on ancient legs*", 0
-Str16: .byte "The FIRE CRYSTAL is yours!", 1, "It burns without burning.", 0
-Str17: .byte "The walls are made of eaten", 1, "centuries. Whispers of lost", 1, "timelines beg you onward.", 0
-Str18: .byte "NIX:", 1, "...you can see me? In this", 1, "dead future, I thought I was", 1, "the last spark left.", 1, "NIX joined the party!", 0
-Str19: .byte "OMEGA GOLEM:", 1, "PROTOTYPE X-9 ONLINE.", 1, "NO RECORDED DEFEATS.", 0
-Str20: .byte "The ancient war machine", 1, "falls silent forever.", 0
-Str21: .byte "Painted on a stone:", 1, "Big fire mountain. Angry.", 1, "Shiny stone inside.", 0
-Str22: .byte "The four Crystals blaze!", 1, "The bridge of hours forms,", 1, "leading to Xethul's Maw!", 0
-Str23: .byte "The bridge of hours is dark.", 1, "It needs the light of the", 1, "four Crystals.", 0
-Str24: .byte "The Old Sage:", 1, "This is the Rift, outside time.", 1, "Xethul devours the Crystals.", 1, "Gather them: Water, Fire,", 1, "Wind, Earth. Then face it.", 0
-Str25: .byte "LYRA CASTLE", 1, "Festival of Ages today!", 1, "The gate hums strangely...", 0
-Str26: .byte "Old woman:", 1, "Legends say five Crystals keep", 1, "the ages turning in harmony.", 0
-Str27: .byte "Boy:", 1, "A blue swirl took my kite!", 1, "It flew INTO the gate!", 0
-Str28: .byte "Villager:", 1, "The old gate on the east hill", 1, "has begun to glow. Be careful!", 0
-Str29: .byte "SLADE:", 1, "A mercenary fights for coin...", 1, "but time itself unraveling?", 1, "That one's on the house.", 1, "SLADE joined the party!", 0
-Str30: .byte "STEEL WARDEN:", 1, "INTRUDERS DETECTED.", 1, "CRYSTAL VAULT SEALED.", 1, "TERMINATION COMMENCING.", 0
-Str31: .byte "The WIND CRYSTAL is yours!", 1, "It whispers of open skies.", 0
-Str32: .byte "WYLA:", 1, "You fight strong! Wyla fight", 1, "with you. Smash big lizard!", 1, "WYLA joined the party!", 0
-Str33: .byte "TERRA WYRM:", 1, "*The caverns shake as the", 1, "great worm uncoils*", 0
-Str34: .byte "The EARTH CRYSTAL is yours!", 1, "It is heavier than mountains.", 0
-Str35: .byte "XETHUL, THE TIME EATER:", 1, "LITTLE SPARKS OF HISTORY...", 1, "I HAVE EATEN A THOUSAND", 1, "TIMELINES. YOURS IS NEXT.", 0
+Str1: .byte "Faded mural:", 1, "Before the ages split, this", 1, "cave was a temple to the", 1, "tide-warden GRASK, keeper", 1, "of the Water Crystal's rest.", 0
+Str2: .byte "Carved above the arch:", 1, "HERE SLEEPS THE SHAPER", 1, "OF VALLEYS. DIG NOT DEEP.", 0
+Str3: .byte "Ancient rune-stone:", 1, "TERRA WYRM has slept beneath", 1, "these roots since before the", 1, "first Crystal War. Its dreams", 1, "shake the deep earth still.", 0
+Str4: .byte "Found an Elixir!", 0
+Str5: .byte "Found an Ether!", 0
+Str6: .byte "Found a Hi-Potion!", 0
+Str7: .byte "Found a Potion!", 0
+Str8: .byte "Found a Revive!", 0
+Str9: .byte "CHRONO WYRM:", 1, "*A serpent of pure paradox", 1, "coils through the void*", 0
+Str10: .byte "The paradox dissolves!", 1, "The Rift feels calmer now.", 0
+Str11: .byte "Corroded plaque:", 1, "PROJECT STEEL WARDEN - built", 1, "to defend the Wind Crystal", 1, "after the cities fell silent.", 1, "Do not disturb the vault.", 0
+Str12: .byte "Flickering terminal:", 1, "...year 2300... Xethul event...", 1, "all cities lost... the Crystal", 1, "is our last power source...", 0
+Str13: .byte "The time gate crackles...", 1, "The crystals' song pulls you", 1, "through the ages!", 0
+Str14: .byte "GRASK, WARDEN OF TIDES:", 1, "WHO DARES CLAIM THE", 1, "WATER CRYSTAL?!", 0
+Str15: .byte "The WATER CRYSTAL is yours!", 1, "Its light hums with the tide.", 0
+Str16: .byte "A shard of crystal light", 1, "washes over the party.", 1, "HP and MP restored!", 0
+Str17: .byte "Knight:", 1, "Fiends spill from the Crystal", 1, "Cave. Our blades cannot cut", 1, "their hides!", 0
+Str18: .byte "MAGMADON:", 1, "*The volcano itself seems", 1, "to rise on ancient legs*", 0
+Str19: .byte "The FIRE CRYSTAL is yours!", 1, "It burns without burning.", 0
+Str20: .byte "A whisper carved in bone:", 1, "XETHUL was not always a", 1, "devourer of ages. Once it", 1, "guarded time itself, until", 1, "the first Crystal shattered.", 0
+Str21: .byte "The walls are made of eaten", 1, "centuries. Whispers of lost", 1, "timelines beg you onward.", 0
+Str22: .byte "NIX:", 1, "...you can see me? In this", 1, "dead future, I thought I was", 1, "the last spark left.", 1, "NIX joined the party!", 0
+Str23: .byte "OMEGA GOLEM:", 1, "PROTOTYPE X-9 ONLINE.", 1, "NO RECORDED DEFEATS.", 0
+Str24: .byte "The ancient war machine", 1, "falls silent forever.", 0
+Str25: .byte "Painted on a stone:", 1, "Big fire mountain. Angry.", 1, "Shiny stone inside.", 0
+Str26: .byte "The four Crystals blaze!", 1, "The bridge of hours forms,", 1, "leading to Xethul's Maw!", 0
+Str27: .byte "The bridge of hours is dark.", 1, "It needs the light of the", 1, "four Crystals.", 0
+Str28: .byte "The Old Sage:", 1, "This is the Rift, outside time.", 1, "Xethul devours the Crystals.", 1, "Gather them: Water, Fire,", 1, "Wind, Earth. Then face it.", 0
+Str29: .byte "LYRA CASTLE", 1, "Festival of Ages today!", 1, "The gate hums strangely...", 0
+Str30: .byte "Old woman:", 1, "Legends say five Crystals keep", 1, "the ages turning in harmony.", 0
+Str31: .byte "Boy:", 1, "A blue swirl took my kite!", 1, "It flew INTO the gate!", 0
+Str32: .byte "Villager:", 1, "The old gate on the east hill", 1, "has begun to glow. Be careful!", 0
+Str33: .byte "SLADE:", 1, "A mercenary fights for coin...", 1, "but time itself unraveling?", 1, "That one's on the house.", 1, "SLADE joined the party!", 0
+Str34: .byte "Scorched tablet:", 1, "MAGMADON was once a guardian", 1, "beast, bound here to shield", 1, "the Fire Crystal from thieves", 1, "of the old empire.", 0
+Str35: .byte "STEEL WARDEN:", 1, "INTRUDERS DETECTED.", 1, "CRYSTAL VAULT SEALED.", 1, "TERMINATION COMMENCING.", 0
+Str36: .byte "The WIND CRYSTAL is yours!", 1, "It whispers of open skies.", 0
+Str37: .byte "WYLA:", 1, "You fight strong! Wyla fight", 1, "with you. Smash big lizard!", 1, "WYLA joined the party!", 0
+Str38: .byte "TERRA WYRM:", 1, "*The caverns shake as the", 1, "great worm uncoils*", 0
+Str39: .byte "The EARTH CRYSTAL is yours!", 1, "It is heavier than mountains.", 0
+Str40: .byte "XETHUL, THE TIME EATER:", 1, "LITTLE SPARKS OF HISTORY...", 1, "I HAVE EATEN A THOUSAND", 1, "TIMELINES. YOURS IS NEXT.", 0
 StoryTab:
   .faraddr Str0
   .faraddr Str1
@@ -125,6 +130,11 @@ StoryTab:
   .faraddr Str33
   .faraddr Str34
   .faraddr Str35
+  .faraddr Str36
+  .faraddr Str37
+  .faraddr Str38
+  .faraddr Str39
+  .faraddr Str40
 .segment "RODATA"
 .export MapTable, TsChrTable, TsChrSize, TsPalTable, TsMetaTable, TsAttrTable
 .export TsGroundMeta, TsHedgeMeta
