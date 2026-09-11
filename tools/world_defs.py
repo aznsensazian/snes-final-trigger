@@ -56,6 +56,11 @@ S("chest_revive", "Found a Revive!")
 S("chest_elixir", "Found an Elixir!")
 S("maw_whisper",  "The walls are made of eaten|centuries. Whispers of lost|timelines beg you onward.")
 S("cavern_sign",  "Carved above the arch:|HERE SLEEPS THE SHAPER|OF VALLEYS. DIG NOT DEEP.")
+S("cave_lore",    "Faded mural:|Before the ages split, this|cave was a temple to the|tide-warden GRASK, keeper|of the Water Crystal's rest.")
+S("volcano_lore", "Scorched tablet:|MAGMADON was once a guardian|beast, bound here to shield|the Fire Crystal from thieves|of the old empire.")
+S("dome_lore",    "Corroded plaque:|PROJECT STEEL WARDEN - built|to defend the Wind Crystal|after the cities fell silent.|Do not disturb the vault.")
+S("caverns_lore", "Ancient rune-stone:|TERRA WYRM has slept beneath|these roots since before the|first Crystal War. Its dreams|shake the deep earth still.")
+S("maw_lore",     "A whisper carved in bone:|XETHUL was not always a|devourer of ages. Once it|guarded time itself, until|the first Crystal shattered.")
 
 # ---------------------------------------------------------------------------
 # Maps. Chars per tileset are defined in gen_world.py.
@@ -326,6 +331,7 @@ CAVE_CRYSTAL_EVENTS = [
     (12, 13, 4, 0, "grask_intro", "grask_win", 4, None),   # GRASK boss (WATER)
     (21, 13, 6, "heal_crystal", 0, 0, 0xFF, None),
     (24, 13, 5, 1, "chest_hipotion", 0, 15, None),
+    (3, 2, 2, "cave_lore", 0, 0, 0xFF, None),
 ]
 
 MAP_VOLCANO = """
@@ -368,6 +374,7 @@ VOLCANO_EVENTS = [
     (13, 7, 4, 1, "magma_intro", "magma_win", 5, None),    # MAGMADON (FIRE)
     (13, 23, 6, "heal_crystal", 0, 0, 0xFF, None),
     (12, 23, 5, 3, "chest_revive", 0, 3, None),  # uses flag bit 3 (spare)
+    (5, 3, 2, "volcano_lore", 0, 0, 0xFF, None),
 ]
 
 MAP_DOME = """
@@ -410,6 +417,7 @@ DOME_EVENTS = [
     (23, 7, 4, 2, "warden_intro", "warden_win", 6, None),  # STEEL WARDEN (WIND)
     (5, 15, 6, "heal_crystal", 0, 0, 0xFF, None),
     (27, 15, 5, 1, "chest_hipotion", 0, 12, None),
+    (5, 1, 2, "dome_lore", 0, 0, 0xFF, None),
 ]
 
 MAP_CAVERNS = """
@@ -452,6 +460,7 @@ CAVERNS_EVENTS = [
     (12, 21, 4, 3, "wyrm_intro", "wyrm_win", 7, None),     # TERRA WYRM (EARTH)
     (30, 14, 6, "heal_crystal", 0, 0, 0xFF, None),
     (2, 26, 2, "cavern_sign", 0, 0, 0xFF, None),
+    (3, 2, 2, "caverns_lore", 0, 0, 0xFF, None),
 ]
 
 MAP_MAW = """
@@ -494,6 +503,7 @@ MAW_EVENTS = [
     (16, 4, 4, 4, "xethul_intro", "xethul_intro", 8, None),   # XETHUL (WON)
     (12, 17, 2, "maw_whisper", 0, 0, 0xFF, None),
     (20, 17, 6, "heal_crystal", 0, 0, 0xFF, None),
+    (4, 17, 2, "maw_lore", 0, 0, 0xFF, None),
 ]
 
 # map registry: (name, gridlines, events, tileset, music, encGroup, encRate, spawn)
