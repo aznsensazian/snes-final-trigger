@@ -35,6 +35,7 @@ SK_ALL   = $01
 SK_HEAL  = $02
 SK_MAG   = $04
 SK_ALLY  = $08
+SK_POISON = $10
 .macro SKILL name, mp, pow, flags
         .local n
 n:      .byte name
@@ -54,7 +55,7 @@ SkillTab:
         SKILL "PrimalRoar", 18, 65, SK_ALL                  ; 8
         SKILL "Aura Heal",  6,  55, SK_HEAL|SK_ALLY         ; 9
         SKILL "Starfall",   15, 75, SK_MAG|SK_ALL           ; 10
-        SKILL "ShadowFang", 7,  60, SK_MAG                  ; 11
+        SKILL "ShadowFang", 7,  60, SK_MAG|SK_POISON        ; 11
         SKILL "Void Pulse", 15, 72, SK_MAG|SK_ALL           ; 12
         SKILL "Fire",       5,  45, SK_MAG                  ; 13
         SKILL "Fira",       12, 95, SK_MAG                  ; 14

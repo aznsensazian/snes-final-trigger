@@ -46,6 +46,7 @@ SK_ALL   = $01
 SK_HEAL  = $02
 SK_MAG   = $04
 SK_ALLY  = $08
+SK_POISON = $10
 
 .segment "ZEROPAGE"
 battlePhase: .res 1
@@ -70,6 +71,7 @@ bEnemyId:    .res 3
 bEnemyAlive: .res 3
 bEnemySpr:   .res 3
 bEnemyPal:   .res 3
+bEnemyPsn:   .res 3             ; poison counter (turns remaining, 0 = none)
 bActCnt:     .res 1
 bEnemyHp:    .res 6             ; 3 words
 bTurnList:   .res 8
@@ -103,6 +105,7 @@ strGained:   .byte "Gained ", 0
 strXpGems:   .byte " XP!", 0
 strLevelUp:  .byte " grew stronger!", 0
 strFury:     .byte "unleashes fury!", 0
+strPoisoned: .byte "Poisoned!", 0
 strGameOver1: .byte "The timeline fades to void.", 0
 strGameOver2: .byte "PRESS START", 0
 
@@ -503,6 +506,8 @@ ptrScr: .res 3
 @yes:   sta f:bEnemyId,x
         lda #1
         sta f:bEnemyAlive,x
+        lda #0
+        sta f:bEnemyPsn,x
         phx
         jsr enemyDefY           ; Y = &EnemyTab[id of slot X]
         a8
@@ -1258,6 +1263,7 @@ bSpd: .res 8
         bcc @have
         jsr buildTurnOrder
         inc bRound
+        jsr tickPoison
 @have:  a16
         lda #0
         a8
@@ -2145,6 +2151,7 @@ lungeTab: .byte 4, 8, 8, 2
         a8
         lda #0
         sta f:bEnemyAlive,x
+        sta f:bEnemyPsn,x
         jsr enemyDefY
         a8
         a16
@@ -2186,6 +2193,46 @@ lungeTab: .byte 4, 8, 8, 2
         rts
 eNumCol: .byte 5, 8, 5
 eNumRow: .byte 5, 10, 15
+.endproc
+
+; ---------------------------------------------------------------------------
+; tick poison damage on all poisoned, living enemies at the start of a round.
+; Poison deals fixed 5% max-hp-ish chip damage (flat 12) and decrements the
+; counter; clears status when it reaches 0.
+.proc tickPoison
+        .a8
+        .i16
+        stz tmp4                ; slot idx
+@lp:    lda tmp4
+        cmp #3
+        bcs @done
+        a16
+        lda #0
+        a8
+        lda tmp4
+        a16
+        and #$00FF
+        tax
+        a8
+        lda f:bEnemyAlive,x
+        beq @next
+        lda f:bEnemyPsn,x
+        beq @next
+        sec
+        sbc #1
+        sta f:bEnemyPsn,x
+        a16
+        lda #12
+        sta bAmount
+        a8
+        lda tmp4
+        sta tmp5
+        jsr dmgToEnemy
+        jsr redrawBase
+        jsr TextFlush
+@next:  inc tmp4
+        bra @lp
+@done:  rts
 .endproc
 
 ; ---------------------------------------------------------------------------
@@ -2455,6 +2502,24 @@ hNumRow: .byte 5, 8, 12, 15, 18
         sta tmp5
         jsr applyEnemyDef
         jsr dmgToEnemy
+        lda tmp1
+        and #SK_POISON
+        beq @noPsn1
+        a16
+        lda #0
+        a8
+        lda tmp5
+        a16
+        and #$00FF
+        tax
+        a8
+        lda f:bEnemyAlive,x
+        beq @noPsn1
+        lda #3
+        sta f:bEnemyPsn,x
+        PUTS 1, 3, 2, strPoisoned
+        jsr TextFlush
+@noPsn1:
         lda #30
         jsr animWait
         jmp finishAction
